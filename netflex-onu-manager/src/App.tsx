@@ -33,6 +33,8 @@ import {
   Users,
   History,
   TrendingUp,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   PieChart,
@@ -107,11 +109,16 @@ api.interceptors.response.use(
       error.response &&
       (error.response.status === 401 || error.response.status === 422)
     ) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("username");
-      localStorage.removeItem("role");
-      window.location.href = "/"; // Force redirect to login
+      if (
+        !error.config.url.includes("/auth/login") &&
+        !window.location.pathname.includes("/login")
+      ) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+        window.location.href = "/";
+      }
     }
     return Promise.reject(error);
   },
@@ -124,6 +131,7 @@ const LoginPage = ({
 }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,9 +155,21 @@ const LoginPage = ({
       toast.success("Bem-vindo ao Netflex!");
     } catch (err: any) {
       console.error("Login error:", err);
-      toast.error(
-        err.response?.data?.error || err.message || "Erro ao fazer login",
-      );
+      let errorMessage = "Erro ao fazer login";
+
+      if (err.response) {
+        if (err.response.status === 401) {
+          errorMessage = "Usuário ou senha incorretos";
+        } else if (err.response.data?.msg) {
+          errorMessage = err.response.data.msg;
+        } else if (err.response.data?.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -189,14 +209,23 @@ const LoginPage = ({
             <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
               Senha
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"
@@ -1475,6 +1504,7 @@ const UniversalConfigModal = ({
 }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -1555,13 +1585,22 @@ const UniversalConfigModal = ({
             <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
               Senha Padrão
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-4">
@@ -1595,6 +1634,7 @@ const OLTManager = () => {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
   const [olts, setOlts] = useState<any[]>([]);
+  const [searchIp, setSearchIp] = useState("");
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -1605,6 +1645,7 @@ const OLTManager = () => {
   const [ip, setIp] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [type, setType] = useState("ZTE");
   const [actions, setActions] = useState(["view"]); // Default action
 
@@ -1741,24 +1782,34 @@ const OLTManager = () => {
         </div>
       </header>
 
-      <div className="bg-[#141414] border border-white/10 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-[#141414] border border-white/10 rounded-2xl overflow-hidden p-4">
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Filtrar por IP..."
+            value={searchIp}
+            onChange={(e) => setSearchIp(e.target.value)}
+            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+
+        <div className="overflow-auto max-h-[600px]">
           <table className="w-full text-left">
-            <thead>
+            <thead className="sticky top-0 bg-[#141414] z-10 shadow-sm">
               <tr className="border-b border-white/5 bg-white/5">
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
                   Nome
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
                   IP
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
                   Tipo
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
                   Credencial
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
                   Ações
                 </th>
               </tr>
@@ -1774,59 +1825,62 @@ const OLTManager = () => {
                     Carregando...
                   </td>
                 </tr>
-              ) : olts.length === 0 ? (
+              ) : olts.filter((olt) => olt.ip.includes(searchIp)).length ===
+                0 ? (
                 <tr>
                   <td
                     colSpan={5}
                     className="px-6 py-8 text-center text-zinc-500"
                   >
-                    Nenhuma OLT cadastrada.
+                    Nenhuma OLT encontrada.
                   </td>
                 </tr>
               ) : (
-                olts.map((olt) => (
-                  <tr
-                    key={olt.id}
-                    className="hover:bg-white/5 transition-colors"
-                  >
-                    <td className="px-6 py-4 text-white font-medium">
-                      {olt.name}
-                    </td>
-                    <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                      {olt.ip}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase">
-                        {olt.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">
-                      {olt.username ? (
-                        <span className="text-emerald-400">
-                          Personalizada ({olt.username})
+                olts
+                  .filter((olt) => olt.ip.includes(searchIp))
+                  .map((olt) => (
+                    <tr
+                      key={olt.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-white font-medium">
+                        {olt.name}
+                      </td>
+                      <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
+                        {olt.ip}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase">
+                          {olt.type}
                         </span>
-                      ) : (
-                        <span className="text-yellow-500">Universal</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 flex gap-2">
-                      <button
-                        onClick={() => openModal(olt)}
-                        className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                        title="Editar"
-                      >
-                        <Settings size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(olt.id)}
-                        className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
-                        title="Excluir"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-4 text-sm text-zinc-400">
+                        {olt.username ? (
+                          <span className="text-emerald-400">
+                            Personalizada ({olt.username})
+                          </span>
+                        ) : (
+                          <span className="text-yellow-500">Universal</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 flex gap-2">
+                        <button
+                          onClick={() => openModal(olt)}
+                          className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                          title="Editar"
+                        >
+                          <Settings size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(olt.id)}
+                          className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
@@ -1921,17 +1975,30 @@ const OLTManager = () => {
                     <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                       Senha (Opcional)
                     </label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
-                      placeholder={
-                        isEditing
-                          ? "Deixe vazio para manter atual"
-                          : "Deixe vazio para usar padrão universal"
-                      }
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                        placeholder={
+                          isEditing
+                            ? "Deixe vazio para manter atual"
+                            : "Deixe vazio para usar padrão universal"
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                      >
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1972,6 +2039,10 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -2027,38 +2098,65 @@ const Profile = () => {
               <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                 Senha Atual
               </label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showCurrent ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  {showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                   Nova Senha
                 </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showNew ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNew(!showNew)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    {showNew ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                   Confirmar Nova Senha
                 </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
             <button
@@ -2094,6 +2192,9 @@ const AdminPanel = () => {
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   // Search filter
   const [userSearch, setUserSearch] = useState("");
@@ -2323,16 +2424,22 @@ const AdminPanel = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                  Senha Inicial
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
@@ -2475,20 +2582,34 @@ const AdminPanel = () => {
                   value={editUsername}
                   onChange={(e) => setEditUsername(e.target.value)}
                   className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  placeholder={editingUser.username}
+                  required
                 />
               </div>
+
               <div>
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                   Nova Senha (opcional)
                 </label>
-                <input
-                  type="password"
-                  value={editPassword}
-                  onChange={(e) => setEditPassword(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                  placeholder="Deixe em branco para manter"
-                />
+                <div className="relative">
+                  <input
+                    type={showEditPassword ? "text" : "password"}
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    placeholder="Deixe em branco para manter"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    {showEditPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="pt-4 flex gap-3">
