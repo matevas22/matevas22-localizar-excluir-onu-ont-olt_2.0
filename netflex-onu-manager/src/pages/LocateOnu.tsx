@@ -20,6 +20,18 @@ const LocateOnu = () => {
   const [result, setResult] = useState<any>(null);
   const [controller, setController] = useState<AbortController | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [recentSns, setRecentSns] = useState<string[]>([]);
+
+  useEffect(() => {
+    api
+      .get("/user/recent-sns")
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setRecentSns(res.data);
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar SNs recentes", err));
+  }, []);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,17 +83,10 @@ const LocateOnu = () => {
       toast.success("ONU excluída com sucesso!");
       setResult(null);
       setShowDeleteModal(false);
-    } catch (err) {
+    } catch (err: any) {
       toast.error("Erro ao excluir ONU");
     }
   };
-
-  const examples = [
-    { sn: "ZTEG12345678", label: "ZTE" },
-    { sn: "HWTC87654321", label: "Huawei" },
-    { sn: "ALCL1A2B3C4D", label: "Alcatel" },
-    { sn: "NETF00000001", label: "Netflex" },
-  ];
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
@@ -136,22 +141,22 @@ const LocateOnu = () => {
           </div>
         </form>
 
-        <div className="flex flex-wrap gap-2">
-          <span className="text-[10px] text-zinc-500 uppercase font-bold flex items-center mr-2">
-            Exemplos:
-          </span>
-          {examples.map((ex) => (
-            <button
-              key={ex.sn}
-              onClick={() => {
-                setSn(ex.sn);
-              }}
-              className="text-[10px] bg-white/5 hover:bg-white/10 text-zinc-400 px-2 py-1 rounded border border-white/5 transition-colors font-mono"
-            >
-              {ex.sn} ({ex.label})
-            </button>
-          ))}
-        </div>
+        {recentSns.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-[10px] text-zinc-500 uppercase font-bold mr-2">
+              Recentes:
+            </span>
+            {recentSns.map((s) => (
+              <button
+                key={s}
+                onClick={() => setSn(s)}
+                className="text-[10px] bg-white/5 hover:bg-white/10 text-zinc-400 px-2 py-1 rounded border border-white/5 transition-colors font-mono"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

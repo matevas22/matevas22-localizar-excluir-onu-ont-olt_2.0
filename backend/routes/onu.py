@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..utils.telnet import search_onu_on_olt, send_command
-from ..models import StatusDescription, OLT, SystemConfig
+from ..models import StatusDescription, OLT, SystemConfig, Log, User
+from ..database import db
 import concurrent.futures
 import re
 
@@ -48,15 +50,24 @@ def get_status_info(status_code):
     return status_code, "gray"
 
 @onu_bp.route('/locate', methods=['POST'])
+@jwt_required()
 def locate_onu_endpoint():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    username = user.username if user else "Unknown"
+    
     print("DEBUG: /locate endpoint hit")
     data = request.json
     sn = data.get('sn')
-    print(f"DEBUG: Searching for SN: {sn}")
+    print(f"DEBUG: Searching for SN: {sn} by user {username}")
 
     if not sn or len(sn) != 12:
         return jsonify({"error": "Invalid SN provided"}), 400
 
+    log = Log(username=username, action=f"Localizou ONU: {sn}")
+    db.session.add(log)
+    db.session.commit()
+    
     olt_data_list = get_olts_with_credentials()
     # Create simple list/dict for compatibility with existing logic if needed, 
     # but we can just iterate olt_data_list.
@@ -181,10 +192,18 @@ def locate_onu_endpoint():
     return jsonify(response)
 
 @onu_bp.route('/signal/<sn>', methods=['GET'])
+@jwt_required()
 def get_onu_signal(sn):
-    
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    username = user.username if user else "Unknown"
+
     if not sn or len(sn) != 12:
         return jsonify({"error": "Invalid SN provided"}), 400
+
+    log = Log(username=username, action=f"Verificou sinal de: {sn}")
+    db.session.add(log)
+    db.session.commit()
 
     olt_data_list = get_olts_with_credentials()
     results = [None] * len(olt_data_list)
