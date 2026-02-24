@@ -31,7 +31,7 @@ const AdminPanel = () => {
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
-  
+
   // Log details modal state
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
@@ -406,7 +406,9 @@ const AdminPanel = () => {
                 <History size={24} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Detalhes do Log</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Detalhes do Log
+                </h3>
                 <p className="text-zinc-500 text-sm">
                   ID do evento: #{selectedLog.id}
                 </p>
@@ -457,8 +459,11 @@ const AdminPanel = () => {
                   <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
                     Sistema Operacional / Navegador
                   </label>
-                  <div className="text-zinc-300 bg-black/30 p-3 rounded-lg border border-white/5 text-xs overflow-hidden text-ellipsis whitespace-nowrap" title={selectedLog.system}>
-                     {selectedLog.system || "N/A"}
+                  <div
+                    className="text-zinc-300 bg-black/30 p-3 rounded-lg border border-white/5 text-xs overflow-hidden text-ellipsis whitespace-nowrap"
+                    title={selectedLog.system}
+                  >
+                    {selectedLog.system || "N/A"}
                   </div>
                 </div>
               </div>
@@ -469,7 +474,8 @@ const AdminPanel = () => {
                 </label>
                 <div className="bg-black/30 p-4 rounded-lg border border-white/5 h-32 overflow-y-auto custom-scrollbar">
                   <p className="text-zinc-400 text-sm whitespace-pre-wrap font-mono">
-                    {selectedLog.details || "Nenhum detalhe adicional disponível."}
+                    {selectedLog.details ||
+                      "Nenhum detalhe adicional disponível."}
                   </p>
                 </div>
               </div>
