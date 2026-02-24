@@ -22,7 +22,13 @@ def login():
         if bcrypt.checkpw(password.encode('utf-8'), stored_password):
             access_token = create_access_token(identity=str(user.id))
             
-            log = Log(username=username, action="User logged in")
+            log = Log(
+                username=username, 
+                action="Login efetuado",
+                ip_address=request.remote_addr,
+                system_info=str(request.user_agent),
+                details="Login realizado com sucesso"
+            )
             db.session.add(log)
             db.session.commit()
 
@@ -44,7 +50,13 @@ def change_password():
     hashed = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
     user.password = hashed.decode('utf-8')
     
-    log = Log(username=user.username, action="Changed password")
+    log = Log(
+        username=user.username, 
+        action="Senha alterada",
+        ip_address=request.remote_addr,
+        system_info=str(request.user_agent),
+        details="Alteração de senha realizada"
+    )
     db.session.add(log)
     db.session.commit()
 

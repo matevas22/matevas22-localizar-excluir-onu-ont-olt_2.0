@@ -19,13 +19,19 @@ class Log(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     username = db.Column('usuario', db.String(80), nullable=False)
     action = db.Column('message', db.String(255), nullable=False)
+    ip_address = db.Column(db.String(50), nullable=True)  
+    system_info = db.Column(db.String(255), nullable=True) 
+    details = db.Column(db.String(500), nullable=True)     
 
     def to_dict(self):
         return {
             'id': self.id,
             'timestamp': self.timestamp.isoformat(),
             'username': self.username,
-            'action': self.action
+            'action': self.action,
+            'ip': self.ip_address,
+            'system': self.system_info,
+            'details': self.details
         }
 
 class OLT(db.Model):

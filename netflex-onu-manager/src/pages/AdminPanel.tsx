@@ -31,6 +31,9 @@ const AdminPanel = () => {
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
+  
+  // Log details modal state
+  const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   // Search filter
   const [userSearch, setUserSearch] = useState("");
@@ -344,7 +347,9 @@ const AdminPanel = () => {
                 {filteredLogs.map((log) => (
                   <tr
                     key={log.id}
-                    className="hover:bg-white/5 transition-colors"
+                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                    onDoubleClick={() => setSelectedLog(log)}
+                    title="Clique duas vezes para ver detalhes"
                   >
                     <td className="px-6 py-4 text-zinc-500 font-mono text-xs whitespace-nowrap">
                       {new Date(log.timestamp).toLocaleString("pt-BR")}
@@ -374,6 +379,111 @@ const AdminPanel = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Log Details Modal */}
+      {selectedLog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setSelectedLog(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#141414] border border-white/10 rounded-2xl max-w-2xl w-full p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedLog(null)}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-4 mb-6 pb-6 border-b border-white/10">
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500">
+                <History size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Detalhes do Log</h3>
+                <p className="text-zinc-500 text-sm">
+                  ID do evento: #{selectedLog.id}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                    Usuário
+                  </label>
+                  <p className="text-white bg-black/30 p-3 rounded-lg border border-white/5 font-medium">
+                    {selectedLog.username}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                    Data/Hora
+                  </label>
+                  <p className="text-white bg-black/30 p-3 rounded-lg border border-white/5 font-mono text-sm">
+                    {new Date(selectedLog.timestamp).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                  Ação
+                </label>
+                <div className="bg-black/30 p-3 rounded-lg border border-white/5">
+                  <span className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-xs font-bold uppercase">
+                    {selectedLog.action}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                    Endereço IP
+                  </label>
+                  <p className="text-zinc-300 bg-black/30 p-3 rounded-lg border border-white/5 font-mono text-sm">
+                    {selectedLog.ip || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                    Sistema Operacional / Navegador
+                  </label>
+                  <div className="text-zinc-300 bg-black/30 p-3 rounded-lg border border-white/5 text-xs overflow-hidden text-ellipsis whitespace-nowrap" title={selectedLog.system}>
+                     {selectedLog.system || "N/A"}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                  Detalhes Técnicos
+                </label>
+                <div className="bg-black/30 p-4 rounded-lg border border-white/5 h-32 overflow-y-auto custom-scrollbar">
+                  <p className="text-zinc-400 text-sm whitespace-pre-wrap font-mono">
+                    {selectedLog.details || "Nenhum detalhe adicional disponível."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={() => setSelectedLog(null)}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-6 rounded-xl transition-all"
+              >
+                Fechar
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
 

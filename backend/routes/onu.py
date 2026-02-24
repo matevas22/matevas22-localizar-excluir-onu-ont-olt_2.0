@@ -62,7 +62,13 @@ def locate_onu_endpoint():
     if not sn or len(sn) != 12:
         return jsonify({"error": "Invalid SN provided"}), 400
 
-    log = Log(username=username, action=f"Localizou ONU: {sn}")
+    log = Log(
+        username=username, 
+        action=f"Localizou ONU: {sn}",
+        ip_address=request.remote_addr,
+        system_info=str(request.user_agent),
+        details=f"Busca realizada para o SN: {sn}"
+    )
     db.session.add(log)
     db.session.commit()
     
@@ -186,7 +192,13 @@ def get_onu_signal(sn):
     if not sn or len(sn) != 12:
         return jsonify({"error": "Invalid SN provided"}), 400
 
-    log = Log(username=username, action=f"Verificou sinal de: {sn}")
+    log = Log(
+        username=username, 
+        action=f"Verificou sinal de: {sn}",
+        ip_address=request.remote_addr,
+        system_info=str(request.user_agent),
+        details=f"Verificou sinal para o SN: {sn}"
+    )
     db.session.add(log)
     db.session.commit()
 
