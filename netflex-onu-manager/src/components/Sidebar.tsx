@@ -14,7 +14,7 @@ import {
   Menu,
 } from "lucide-react";
 import { UserData } from "../types";
-
+import logo from "../img/logo/logo-white.png";
 interface SidebarProps {
   user: UserData;
   onLogout: () => void;
@@ -67,9 +67,7 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
       >
         <div className="p-4 flex items-center justify-between border-b border-white/5 h-16">
           {!isCollapsed && (
-            <h2 className="text-xl font-bold text-emerald-500 tracking-tighter whitespace-nowrap overflow-hidden">
-              NETFLEX
-            </h2>
+            <img src={logo} alt="NETFLEX" className="h-8 w-auto" />
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}

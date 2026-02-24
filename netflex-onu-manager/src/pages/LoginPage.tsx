@@ -5,6 +5,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import { UserData } from "../types";
+import logo from "../img/logo/logo-white.png";
 
 interface LoginPageProps {
   onLogin: (data: { token: string; user: UserData }) => void;
@@ -65,9 +66,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         className="w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl p-8 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-emerald-500 mb-2 tracking-tighter">
-            NETFLEX
-          </h1>
+          <img src={logo} alt="NETFLEX" className="h-12 w-auto mx-auto mb-4" />
           <p className="text-zinc-400 text-sm">
             Sistema de Gerenciamento ONU/ONT
           </p>
