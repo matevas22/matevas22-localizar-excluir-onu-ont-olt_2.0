@@ -11,7 +11,6 @@ onu_bp = Blueprint('onu', __name__)
 def get_olts_with_credentials():
     olts = OLT.query.all()
     
-    # Get universal credentials
     u_user_cfg = SystemConfig.query.filter_by(key='universal_username').first()
     u_pass_cfg = SystemConfig.query.filter_by(key='universal_password').first()
     
@@ -23,7 +22,6 @@ def get_olts_with_credentials():
         user = olt.username if olt.username else univ_user
         pwd = olt.password if olt.password else univ_pass
         
-        # Only include OLTs where we successfully resolved credentials
         if user and pwd:
             results.append({
                 'ip': olt.ip,
@@ -69,16 +67,10 @@ def locate_onu_endpoint():
     db.session.commit()
     
     olt_data_list = get_olts_with_credentials()
-    # Create simple list/dict for compatibility with existing logic if needed, 
-    # but we can just iterate olt_data_list.
     
-    OLT_LIST = [d['ip'] for d in olt_data_list]
-    OLT_NOMES = {d['ip']: d['name'] for d in olt_data_list}
-
-    results = [None] * len(olt_data_list)
+    found_onu = None
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        # Pass credentials explicitly to avoid app context issues in threads
         future_to_idx = {
             executor.submit(
                 search_onu_on_olt, 
@@ -93,41 +85,41 @@ def locate_onu_endpoint():
         for future in concurrent.futures.as_completed(future_to_idx):
             idx = future_to_idx[future]
             try:
-                data = future.result()
-                results[idx] = data
+                raw_output = future.result()
+                if raw_output:
+                    c_ip = olt_data_list[idx]['ip']
+                    c_name = olt_data_list[idx]['name']
+                    
+                    lines = raw_output.split('\n')
+                    for line in lines:
+                        if "gpon-onu_" in line and not line.strip().startswith(f"show gpon onu by sn {sn}"):
+                            parts = line.split()
+                            for part in parts:
+                                if part.startswith("gpon-onu_"):
+                                    found_onu = {
+                                        "olt_ip": c_ip,
+                                        "olt_name": c_name,
+                                        "interface": part,
+                                        "raw_line": line,
+                                        "username": olt_data_list[idx]['username'],
+                                        "password": olt_data_list[idx]['password']
+                                    }
+                                    break
+                        if found_onu: break
+                
+                if found_onu:
+                    for f in future_to_idx:
+                        f.cancel()
+                    break
+
             except Exception as exc:
                 print(f'{olt_data_list[idx]["ip"]} generated an exception: {exc}')
-
-    found_onu = None
-    for i, raw_output in enumerate(results):
-        if raw_output:
-            c_ip = olt_data_list[i]['ip']
-            c_name = olt_data_list[i]['name']
-            
-            lines = raw_output.split('\n')
-            for line in lines:
-                if "gpon-onu_" in line:
-                    parts = line.split()
-                    for part in parts:
-                        if part.startswith("gpon-onu_"):
-                            found_onu = {
-                                "olt_ip": c_ip,
-                                "olt_name": c_name,
-                                "interface": part,
-                                "raw_line": line,
-                                "username": olt_data_list[i]['username'],
-                                "password": olt_data_list[i]['password']
-                            }
-                            break
-                if found_onu: break
-        if found_onu: break
 
     if not found_onu:
         return jsonify({"error": "ONU not found on any OLT"}), 404
     
     olt_ip = found_onu['olt_ip']
     interface = found_onu['interface']
-    # Use credentials from found_onu to call send_command
     c_user = found_onu['username']
     c_pass = found_onu['password']
 
@@ -137,17 +129,18 @@ def locate_onu_endpoint():
     rx_olt = -99.9 
     tx_onu = -99.9 
     
-    
     cmd_detail = f"show gpon onu detail-info {interface}"
     cmd_rx_onu = f"show pon power onu-rx {interface}"
+    cmd_rx_olt = f"show pon power olt-rx {interface}"
     
-    
-    commands = [cmd_detail, cmd_rx_onu]
+    commands = [cmd_detail, cmd_rx_onu, cmd_rx_olt]
     command_outputs = send_command(olt_ip, commands, c_user, c_pass)
     
-    if command_outputs:
+    if command_outputs and len(command_outputs) >= 3:
         detail_output = command_outputs[0]
         rx_output = command_outputs[1]
+        olt_rx_output = command_outputs[2]
+
         phase_match = re.search(r"Phase state:\s+(\w+)", detail_output, re.IGNORECASE)
         if phase_match:
             status = phase_match.group(1)
@@ -159,14 +152,6 @@ def locate_onu_endpoint():
         if rx_match:
             rx_onu = float(rx_match.group(1))
 
-        pass 
-    
-    
-    more_commands = [f"show pon power olt-rx {interface}"]
-    more_outputs = send_command(olt_ip, more_commands, c_user, c_pass)
-    
-    if more_outputs:
-        olt_rx_output = more_outputs[0]
         olt_rx_match = re.search(r"(-?\d+\.\d+)", olt_rx_output)
         if olt_rx_match:
             rx_olt = float(olt_rx_match.group(1))
@@ -182,10 +167,10 @@ def locate_onu_endpoint():
         "status_description": desc,
         "status_color": color,
         "signals": {
-            "rxOnu": rx_onu,   # e.g. -20.86
-            "txOnu": 2.2,      # Placeholder for actual Tx Power at ONU (rarely measured directly)
-            "rxOlt": rx_olt,   # e.g. -23.20 (Upstream)
-            "txOlt": 3.5       # Placeholder
+            "rxOnu": rx_onu,
+            "txOnu": 2.2,
+            "rxOlt": rx_olt,
+            "txOlt": 3.5 
         }
     }
 

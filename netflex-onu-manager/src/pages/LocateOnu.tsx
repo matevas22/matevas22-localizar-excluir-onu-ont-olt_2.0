@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,12 +13,10 @@ import {
 import { toast } from "react-toastify";
 import axios from "axios";
 import api from "../services/api";
+import { PageProps } from "../types";
 
-const LocateOnu = () => {
-  const [sn, setSnState] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [controller, setController] = useState<AbortController | null>(null);
+const LocateOnu = ({ state, setState }: PageProps) => {
+  const { sn, loading, result, controller } = state;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [recentSns, setRecentSns] = useState<string[]>([]);
 
@@ -33,6 +31,10 @@ const LocateOnu = () => {
       .catch((err) => console.error("Erro ao carregar SNs recentes", err));
   }, []);
 
+  const setSn = (value: string) => {
+    setState((prev) => ({ ...prev, sn: value.toUpperCase() }));
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanSn = sn.trim();
@@ -42,9 +44,12 @@ const LocateOnu = () => {
     }
 
     const newController = new AbortController();
-    setController(newController);
-    setLoading(true);
-    setResult(null);
+    setState((prev) => ({
+      ...prev,
+      loading: true,
+      result: null,
+      controller: newController,
+    }));
 
     try {
       const res = await api.post(
@@ -52,14 +57,13 @@ const LocateOnu = () => {
         { sn: cleanSn },
         { signal: newController.signal },
       );
-      setResult(res.data);
-      setLoading(false);
+      setState((prev) => ({ ...prev, result: res.data, loading: false }));
     } catch (err: any) {
       if (axios.isCancel(err)) {
         // Request cancelled
       } else {
         toast.error(err.response?.data?.error || "Erro ao localizar ONU");
-        setLoading(false);
+        setState((prev) => ({ ...prev, loading: false }));
       }
     }
   };
@@ -67,13 +71,8 @@ const LocateOnu = () => {
   const handleCancel = () => {
     if (controller) {
       controller.abort();
-      setLoading(false);
-      setController(null);
+      setState((prev) => ({ ...prev, loading: false, controller: null }));
     }
-  };
-
-  const setSn = (value: string) => {
-    setSnState(value.toUpperCase());
   };
 
   const handleDelete = async () => {
@@ -81,7 +80,7 @@ const LocateOnu = () => {
     try {
       await api.delete(`/onu/${result.sn}`);
       toast.success("ONU excluída com sucesso!");
-      setResult(null);
+      setState((prev) => ({ ...prev, result: null }));
       setShowDeleteModal(false);
     } catch (err: any) {
       toast.error("Erro ao excluir ONU");
