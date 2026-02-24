@@ -1,0 +1,5 @@
+{
+  "name": "Netflex ONU Manager",
+  "description": "Sistema de gerenciamento de ONU/ONT para técnicos de telecomunicações, com localização via Telnet, diagnóstico de sinal e painel administrativo.",
+  "requestFramePermissions": []
+}
