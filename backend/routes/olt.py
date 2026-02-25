@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
 from ..models import db, OLT, StatusDescription, SystemConfig
 import re
 
 olt_bp = Blueprint('olts', __name__)
 
 @olt_bp.route('/config', methods=['GET'])
+@jwt_required()
 def get_config():
     configs = SystemConfig.query.all()
     if not configs:
@@ -17,6 +19,7 @@ def get_config():
     return jsonify(config_dict)
 
 @olt_bp.route('/config', methods=['POST'])
+@jwt_required()
 def update_config():
     data = request.json
     username = data.get('universal_username')
@@ -40,16 +43,25 @@ def update_config():
     return jsonify({'message': 'Config updated'}), 200
 
 @olt_bp.route('/', methods=['GET'])
+@jwt_required()
 def list_olts():
     olts = OLT.query.all()
-    return jsonify([o.to_dict() for o in olts])
+    result = []
+    for olt in olts:
+        d = olt.to_dict()
+        if 'password' in d and d['password']:
+            d['password'] = "********"
+        result.append(d)
+    return jsonify(result)
 
 @olt_bp.route('/status', methods=['GET'])
+@jwt_required()
 def list_statuses():
     statuses = StatusDescription.query.all()
     return jsonify([s.to_dict() for s in statuses])
 
 @olt_bp.route('/status', methods=['POST'])
+@jwt_required()
 def add_status():
     data = request.json
     code = data.get('status_code')
@@ -69,6 +81,7 @@ def add_status():
     return jsonify(new_status.to_dict()), 201
 
 @olt_bp.route('/status/<int:id>', methods=['PUT'])
+@jwt_required()
 def update_status(id):
     status = StatusDescription.query.get(id)
     if not status:
@@ -83,6 +96,7 @@ def update_status(id):
     return jsonify(status.to_dict())
 
 @olt_bp.route('/status/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_status(id):
     status = StatusDescription.query.get(id)
     if not status:
@@ -90,13 +104,9 @@ def delete_status(id):
     db.session.delete(status)
     db.session.commit()
     return jsonify({"message": "Deleted"})
-    for olt in olts:
-        d = olt.to_dict()
-        d['password'] = "********" if olt.password else None
-        result.append(d)
-    return jsonify(result)
 
 @olt_bp.route('/', methods=['POST'])
+@jwt_required()
 def add_olt():
     data = request.json
     name = data.get('name')
@@ -122,6 +132,7 @@ def add_olt():
     return jsonify({"message": "OLT added successfully", "olt": new_olt.to_dict()}), 201
 
 @olt_bp.route('/<int:id>', methods=['PUT'])
+@jwt_required()
 def update_olt(id):
     olt = OLT.query.get(id)
     if not olt:
@@ -144,6 +155,7 @@ def update_olt(id):
     return jsonify({"message": "OLT updated"}), 200
 
 @olt_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
 def delete_olt(id):
     olt = OLT.query.get(id)
     if not olt:

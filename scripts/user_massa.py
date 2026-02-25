@@ -1,8 +1,8 @@
 import sqlite3
 import bcrypt
 
-def adicionar_usuarios(usuarios):
-    conn = sqlite3.connect("usuarios.db")
+def add_users(usuarios):
+    conn = sqlite3.connect("database/usuarios.db")
     cursor = conn.cursor()
 
     for username, senha in usuarios.items():
@@ -21,7 +21,7 @@ def adicionar_usuarios(usuarios):
     conn.close()
 
 
-usuarios_para_adicionar = {
+user_add = {
 	"gilvan.oliveira": "mudar@123",
 	"atila.lopes": "mudar@123",
 	"felipe.souza": "mudar@123",
@@ -37,4 +37,4 @@ usuarios_para_adicionar = {
 	"bruno.silva": "mudar@123"
 
 }
-adicionar_usuarios(usuarios_para_adicionar)
+add_users(user_add)
