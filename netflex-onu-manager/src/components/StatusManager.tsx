@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { Loader2, X, Settings, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../services/api";
+import "../styles/StatusManager.css";
 
 const StatusManager = ({
   isOpen,
@@ -92,67 +93,57 @@ const StatusManager = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="status-manager-overlay" onClick={onClose}>
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-[#141414] border border-white/10 rounded-2xl max-w-2xl w-full p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto"
+        className="status-manager-container"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-500 hover:text-white"
-        >
+        <button onClick={onClose} className="status-manager-close-btn">
           <X size={20} />
         </button>
 
-        <h2 className="text-2xl font-bold text-white mb-6">
-          Gerenciar Descrições de Status
-        </h2>
+        <h2 className="status-manager-title">Gerenciar Descrições de Status</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="status-manager-grid">
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">
+            <h3 className="status-manager-section-title">
               {editingId ? "Editar Status" : "Novo Status"}
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="status-manager-form">
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                <label className="status-manager-label">
                   Código de Status (Raw)
                 </label>
                 <input
                   type="text"
                   value={statusCode}
                   onChange={(e) => setStatusCode(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                  className="status-manager-input"
                   placeholder="Ex: working, los, dying-gasp"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+                <label className="status-manager-label">
                   Descrição Amigável
                 </label>
                 <input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                  className="status-manager-input"
                   placeholder="Ex: Operacional, Sem Sinal"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                  Cor
-                </label>
+                <label className="status-manager-label">Cor</label>
                 <select
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                  className="status-manager-select"
                 >
                   <option value="gray">Cinza (Padrão)</option>
                   <option value="green">Verde (Sucesso/Online)</option>
@@ -162,64 +153,54 @@ const StatusManager = ({
                 </select>
               </div>
 
-              <div className="flex gap-2">
+              <div className="status-manager-btn-group">
                 {editingId && (
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 rounded-xl bg-zinc-800 text-white hover:bg-zinc-700 transition-colors"
+                    className="status-manager-btn-cancel"
                   >
                     Cancelar
                   </button>
                 )}
-                <button
-                  type="submit"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all"
-                >
+                <button type="submit" className="status-manager-btn-submit">
                   {editingId ? "Atualizar" : "Adicionar"}
                 </button>
               </div>
             </form>
           </div>
 
-          <div className="border-l border-white/10 pl-8">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Status Cadastrados
-            </h3>
-            <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+          <div className="status-manager-list-container">
+            <h3 className="status-manager-section-title">Status Cadastrados</h3>
+            <div className="status-manager-list">
               {loading ? (
-                <Loader2 className="animate-spin mx-auto text-zinc-500" />
+                <Loader2 className="status-manager-loader" />
               ) : statuses.length === 0 ? (
-                <p className="text-zinc-500 italic">Nenhum status definido.</p>
+                <p className="status-manager-empty">Nenhum status definido.</p>
               ) : (
                 statuses.map((s) => (
-                  <div
-                    key={s.id}
-                    className="bg-white/5 border border-white/5 p-3 rounded-lg flex justify-between items-center group hover:border-white/20 transition-all"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
+                  <div key={s.id} className="status-item group">
+                    <div className="status-item-info">
+                      <div className="status-item-header">
                         <span
-                          className={`w-2 h-2 rounded-full bg-${s.color === "green" ? "emerald" : s.color}-500`}
+                          className={`status-item-dot status-dot-${s.color === "green" ? "emerald" : s.color}`}
                         />
-                        <span className="font-bold text-white text-sm">
+                        <span className="status-item-description">
                           {s.description}
                         </span>
                       </div>
-                      <span className="text-xs text-zinc-500 font-mono">
-                        {s.status_code}
-                      </span>
+                      <span className="status-item-code">{s.status_code}</span>
                     </div>
-                    <div className="flex gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                    <div className="status-item-actions">
                       <button
                         onClick={() => handleEdit(s)}
-                        className="p-1.5 hover:bg-white/10 rounded text-zinc-300"
+                        className="status-action-btn status-action-btn-edit"
                       >
                         <Settings size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="p-1.5 hover:bg-red-500/20 rounded text-red-500"
+                        className="status-action-btn status-action-btn-delete"
                       >
                         <Trash2 size={14} />
                       </button>

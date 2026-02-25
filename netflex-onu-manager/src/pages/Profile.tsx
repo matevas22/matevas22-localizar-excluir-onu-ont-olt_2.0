@@ -1,3 +1,4 @@
+import "../styles/Profile.css";
 import React, { useState } from "react";
 import { Key, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
@@ -34,94 +35,86 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="profile-container">
       <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
-          Meu Perfil
-        </h1>
-        <p className="text-zinc-400">Gerencie suas informações e segurança.</p>
+        <h1 className="profile-title">Meu Perfil</h1>
+        <p className="profile-subtitle">
+          Gerencie suas informações e segurança.
+        </p>
       </header>
 
-      <div className="max-w-2xl bg-[#141414] border border-white/10 rounded-2xl overflow-hidden">
-        <div className="p-8 border-b border-white/5 flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-500 text-3xl font-bold">
+      <div className="profile-card">
+        <div className="profile-card-header">
+          <div className="profile-avatar">
             {localStorage.getItem("username")?.[0].toUpperCase()}
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="profile-username">
               {localStorage.getItem("username")}
             </h2>
-            <p className="text-zinc-500 uppercase tracking-widest text-xs font-bold mt-1">
-              {localStorage.getItem("role")}
-            </p>
+            <p className="profile-role">{localStorage.getItem("role")}</p>
           </div>
         </div>
 
-        <div className="p-8">
-          <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-            <Key size={20} className="text-emerald-500" />
+        <div className="profile-body">
+          <h3 className="section-title">
+            <Key size={20} className="icon-emerald" />
             Alterar Senha
           </h3>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
+          <form onSubmit={handlePasswordChange} className="profile-form">
             <div>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                Senha Atual
-              </label>
-              <div className="relative">
+              <label className="form-label">Senha Atual</label>
+              <div className="password-input-wrapper">
                 <input
                   type={showCurrent ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="form-input"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent(!showCurrent)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                  className="password-toggle-btn"
                 >
                   {showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-grid">
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                  Nova Senha
-                </label>
-                <div className="relative">
+                <label className="form-label">Nova Senha</label>
+                <div className="password-input-wrapper">
                   <input
                     type={showNew ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="form-input"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                    className="password-toggle-btn"
                   >
                     {showNew ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                  Confirmar Nova Senha
-                </label>
-                <div className="relative">
+                <label className="form-label">Confirmar Nova Senha</label>
+                <div className="password-input-wrapper">
                   <input
                     type={showConfirm ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="form-input"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                    className="password-toggle-btn"
                   >
                     {showConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -131,10 +124,10 @@ const Profile = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white font-bold py-3 px-8 rounded-xl transition-all flex items-center gap-2"
+              className="profile-submit-btn"
             >
               {loading ? (
-                <Loader2 className="animate-spin" size={20} />
+                <Loader2 className="spinner" size={20} />
               ) : (
                 "Atualizar Senha"
               )}

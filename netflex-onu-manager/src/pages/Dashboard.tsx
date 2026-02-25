@@ -1,3 +1,4 @@
+import "../styles/Dashboard.css";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -89,95 +90,82 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-white tracking-tight">
-          Painel de Controle
-        </h1>
-        <p className="text-zinc-400">
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <h1 className="dashboard-title">Painel de Controle</h1>
+        <p className="dashboard-subtitle">
           Visão geral das suas atividades recentes.
         </p>
       </header>
 
       {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-icon emerald">
               <Activity size={24} />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">
-                Total de Ações
-              </p>
-              <h4 className="text-2xl font-bold text-white">{totalActions}</h4>
+              <p className="stat-label">Total de Ações</p>
+              <h4 className="stat-value">{totalActions}</h4>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-icon blue">
               <TrendingUp size={24} />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">
-                Mais Frequente
-              </p>
-              <h4
-                className="text-xl font-bold text-white truncate max-w-[150px]"
-                title={mostFrequent}
-              >
+              <p className="stat-label">Mais Frequente</p>
+              <h4 className="stat-value truncate" title={mostFrequent}>
                 {mostFrequent}
               </h4>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-500/10 text-purple-500 rounded-xl">
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-icon purple">
               <Shield size={24} />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">
-                Status do Sistema
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                <h4 className="text-xl font-bold text-white">Online</h4>
+              <p className="stat-label">Status do Sistema</p>
+              <div className="status-indicator">
+                <span className="status-dot"></span>
+                <h4 className="status-text">Online</h4>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#141414] border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-orange-500/10 text-orange-500 rounded-xl">
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-icon orange">
               <Settings size={24} />
             </div>
             <div>
-              <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider">
-                Versão
-              </p>
-              <h4 className="text-2xl font-bold text-white">v1.0.2</h4>
+              <p className="stat-label">Versão</p>
+              <h4 className="stat-value">v1.0.2</h4>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="main-grid">
         {/* Left Column - Charts */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 flex flex-col">
-            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-              <History size={20} className="text-emerald-500" />
+        <div className="charts-column">
+          <div className="charts-card">
+            <h3 className="card-title">
+              <History size={20} className="icon-emerald" />
               Resumo de Volume
             </h3>
-            <div className="flex-1 min-h-[300px]">
+            <div className="chart-container">
               {loading ? (
-                <div className="h-full flex items-center justify-center">
-                  <Loader2 className="animate-spin text-emerald-500" />
+                <div className="loading-container">
+                  <Loader2 className="spinner" size={24} />
                 </div>
               ) : stats.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -235,7 +223,7 @@ const Dashboard = () => {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-zinc-500 italic">
+                <div className="empty-state">
                   Nenhuma atividade registrada ainda.
                 </div>
               )}
@@ -243,35 +231,27 @@ const Dashboard = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-[#141414] border border-white/10 rounded-2xl overflow-hidden">
-            <div className="p-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Activity size={20} className="text-emerald-500" />
+          <div className="activity-card">
+            <div className="activity-header">
+              <h3 className="card-title">
+                <Activity size={20} className="icon-emerald" />
                 Atividade Recente
               </h3>
-              <Link
-                to="/profile"
-                className="text-xs text-emerald-500 hover:text-emerald-400 font-bold uppercase tracking-wider hover:underline"
-              >
+              <Link to="/profile" className="view-all-link">
                 Ver tudo
               </Link>
             </div>
-            <div className="divide-y divide-white/5">
+            <div className="activity-list">
               {recentLogs.length > 0 ? (
                 recentLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4"
-                  >
-                    <div className="p-2 rounded-lg bg-zinc-800 text-zinc-400 mt-1">
+                  <div key={log.id} className="activity-item">
+                    <div className="activity-icon">
                       <Activity size={16} />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-baseline mb-1">
-                        <h4 className="text-white font-medium text-sm">
-                          {log.action}
-                        </h4>
-                        <span className="text-zinc-500 text-xs font-mono">
+                    <div className="activity-content">
+                      <div className="activity-top">
+                        <h4 className="activity-action">{log.action}</h4>
+                        <span className="activity-time">
                           {new Date(log.timestamp).toLocaleDateString()}{" "}
                           {new Date(log.timestamp).toLocaleTimeString([], {
                             hour: "2-digit",
@@ -279,31 +259,29 @@ const Dashboard = () => {
                           })}
                         </span>
                       </div>
-                      <p className="text-zinc-400 text-xs line-clamp-1">
-                        {log.details}
-                      </p>
+                      <p className="activity-details">{log.details}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-8 text-center text-zinc-500 italic text-sm">
-                  Nenhuma atividade recente.
-                </div>
+                <div className="empty-state">Nenhuma atividade recente.</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Right Column - Pie Chart & Actions */}
-        <div className="space-y-6">
-          <div className="bg-[#141414] border border-white/10 rounded-2xl p-6 flex flex-col h-[400px]">
-            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-              <TrendingUp size={20} className="text-emerald-500" />
+        <div className="sidebar-column">
+          <div className="charts-card">
+            <h3 className="card-title">
+              <TrendingUp size={20} className="icon-emerald" />
               Categorias
             </h3>
-            <div className="flex-1 flex flex-col justify-center items-center">
+            <div className="chart-container">
               {loading ? (
-                <Loader2 className="animate-spin text-emerald-500" />
+                <div className="loading-container">
+                  <Loader2 className="spinner" size={24} />
+                </div>
               ) : stats.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -349,42 +327,24 @@ const Dashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="text-zinc-500 italic flex flex-col items-center gap-2">
-                  <Activity size={32} className="opacity-20" />
+                <div className="empty-state">
+                  <Activity size={32} className="empty-icon" />
                   <span>Sem dados gráficos.</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-900/20 to-black border border-emerald-500/20 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Acesso Rápido
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/locate"
-                className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"
-              >
-                <Search
-                  className="text-emerald-500 group-hover:scale-110 transition-transform"
-                  size={24}
-                />
-                <span className="text-xs font-bold text-emerald-400 uppercase">
-                  Localizar
-                </span>
+          <div className="quick-access-card">
+            <h3 className="card-title">Acesso Rápido</h3>
+            <div className="quick-access-grid">
+              <Link to="/locate" className="quick-link emerald">
+                <Search className="quick-icon" size={24} />
+                <span className="quick-label">Localizar</span>
               </Link>
-              <Link
-                to="/diagnosis"
-                className="bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"
-              >
-                <Activity
-                  className="text-blue-500 group-hover:scale-110 transition-transform"
-                  size={24}
-                />
-                <span className="text-xs font-bold text-blue-400 uppercase">
-                  Diagnóstico
-                </span>
+              <Link to="/diagnosis" className="quick-link blue">
+                <Activity className="quick-icon" size={24} />
+                <span className="quick-label">Diagnóstico</span>
               </Link>
             </div>
           </div>

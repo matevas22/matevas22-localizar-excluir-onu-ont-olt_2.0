@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import api from "../services/api";
 import StatusManager from "../components/StatusManager";
 import UniversalConfigModal from "../components/UniversalConfigModal";
+import "../styles/OLTManager.css";
 
 const OLTManager = () => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -115,78 +116,60 @@ const OLTManager = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <header className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Gerenciamento de OLTs
-          </h1>
-          <p className="text-zinc-400">Configure as OLTs e suas credenciais.</p>
+    <div className="olt-manager-container">
+      <header className="olt-header">
+        <div className="title-section">
+          <h1>Gerenciamento de OLTs</h1>
+          <p>Configure as OLTs e suas credenciais.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="header-actions">
           <button
             onClick={() => setIsConfigModalOpen(true)}
-            className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+            className="action-btn"
           >
-            <Key className="w-5 h-5" />
+            <Key size={20} />
             Credenciais Universais
           </button>
           <button
             onClick={() => setIsStatusModalOpen(true)}
-            className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
+            className="action-btn"
           >
-            <Settings className="w-5 h-5" />
+            <Settings size={20} />
             Gerenciar Status
           </button>
-          <button
-            onClick={() => openModal()}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2"
-          >
-            <Settings className="w-5 h-5" />
+          <button onClick={() => openModal()} className="action-btn primary">
+            <Settings size={20} />
             Adicionar OLT
           </button>
         </div>
       </header>
 
-      <div className="bg-[#141414] border border-white/10 rounded-2xl overflow-hidden p-4">
-        <div className="mb-4">
+      <div className="table-card">
+        <div className="filter-input-wrapper">
           <input
             type="text"
             placeholder="Filtrar por IP..."
             value={searchIp}
             onChange={(e) => setSearchIp(e.target.value)}
-            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+            className="filter-input"
           />
         </div>
 
-        <div className="overflow-auto max-h-[600px]">
-          <table className="w-full text-left">
-            <thead className="sticky top-0 bg-[#141414] z-10 shadow-sm">
-              <tr className="border-b border-white/5 bg-white/5">
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
-                  Nome
-                </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
-                  IP
-                </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
-                  Tipo
-                </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
-                  Credencial
-                </th>
-                <th className="px-6 py-4 text-xs font-bold text-zinc-500 uppercase tracking-wider bg-[#141414]">
-                  Ações
-                </th>
+        <div className="table-wrapper">
+          <table className="olt-table">
+            <thead className="table-head">
+              <tr>
+                <th>Nome</th>
+                <th>IP</th>
+                <th>Tipo</th>
+                <th>Credencial</th>
+                <th>Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="table-body">
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-8 text-center text-zinc-500"
-                  >
+                  <td colSpan={5} className="loading-cell">
                     <Loader2 className="animate-spin mx-auto mb-2" />
                     Carregando...
                   </td>
@@ -194,10 +177,7 @@ const OLTManager = () => {
               ) : olts.filter((olt) => olt.ip.includes(searchIp)).length ===
                 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-8 text-center text-zinc-500"
-                  >
+                  <td colSpan={5} className="empty-cell">
                     Nenhuma OLT encontrada.
                   </td>
                 </tr>
@@ -205,41 +185,32 @@ const OLTManager = () => {
                 olts
                   .filter((olt) => olt.ip.includes(searchIp))
                   .map((olt) => (
-                    <tr
-                      key={olt.id}
-                      className="hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-white font-medium">
-                        {olt.name}
+                    <tr key={olt.id}>
+                      <td className="col-name">{olt.name}</td>
+                      <td className="col-ip">{olt.ip}</td>
+                      <td className="col-type">
+                        <span className="type-badge">{olt.type}</span>
                       </td>
-                      <td className="px-6 py-4 text-zinc-400 font-mono text-sm">
-                        {olt.ip}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 rounded bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase">
-                          {olt.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-zinc-400">
+                      <td className="col-cred">
                         {olt.username ? (
-                          <span className="text-emerald-400">
+                          <span className="cred-custom">
                             Personalizada ({olt.username})
                           </span>
                         ) : (
-                          <span className="text-yellow-500">Universal</span>
+                          <span className="cred-universal">Universal</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 flex gap-2">
+                      <td className="col-actions">
                         <button
                           onClick={() => openModal(olt)}
-                          className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
+                          className="action-icon-btn"
                           title="Editar"
                         >
                           <Settings size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(olt.id)}
-                          className="p-2 hover:bg-red-500/10 rounded-lg text-red-500 transition-colors"
+                          className="action-icon-btn delete"
                           title="Excluir"
                         >
                           <Trash2 size={18} />
@@ -255,63 +226,54 @@ const OLTManager = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          onClick={() => setIsModalOpen(false)}
-        >
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#141414] border border-white/10 rounded-2xl max-w-lg w-full p-8 shadow-2xl relative"
+            className="modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white"
+              className="modal-close"
             >
               <X size={20} />
             </button>
 
-            <h2 className="text-2xl font-bold text-white mb-6">
+            <h2 className="modal-title">
               {isEditing ? "Editar OLT" : "Nova OLT"}
             </h2>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                  Nome / Identificação
-                </label>
+            <form onSubmit={handleSave} className="modal-form">
+              <div className="input-group">
+                <label className="input-label">Nome / Identificação</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                  className="form-input"
                   placeholder="Ex: OLT Principal"
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                    Endereço IP
-                  </label>
+              <div className="grid-cols-2">
+                <div className="input-group">
+                  <label className="input-label">Endereço IP</label>
                   <input
                     type="text"
                     value={ip}
                     onChange={(e) => setIp(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 font-mono"
+                    className="form-input font-mono"
                     placeholder="192.168.1.1"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                    Tipo / Fabricante
-                  </label>
+                <div className="input-group">
+                  <label className="input-label">Tipo / Fabricante</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                    className="form-select"
                   >
                     <option value="ZTE">ZTE</option>
                     <option value="Huawei">Huawei</option>
@@ -320,33 +282,27 @@ const OLTManager = () => {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/5">
-                <h3 className="text-sm font-bold text-white mb-4">
-                  Autenticação
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                      Usuário (Opcional)
-                    </label>
+              <div className="auth-section">
+                <h3 className="auth-title">Autenticação</h3>
+                <div className="auth-grid">
+                  <div className="input-group">
+                    <label className="input-label">Usuário (Opcional)</label>
                     <input
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                      className="form-input"
                       placeholder="Deixe vazio para usar padrão universal"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
-                      Senha (Opcional)
-                    </label>
-                    <div className="relative">
+                  <div className="input-group">
+                    <label className="input-label">Senha (Opcional)</label>
+                    <div className="password-wrapper">
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500"
+                        className="form-input"
                         placeholder={
                           isEditing
                             ? "Deixe vazio para manter atual"
@@ -356,7 +312,7 @@ const OLTManager = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
+                        className="password-toggle"
                       >
                         {showPassword ? (
                           <EyeOff size={20} />
@@ -369,18 +325,15 @@ const OLTManager = () => {
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="form-actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl transition-all"
+                  className="cancel-modal-btn"
                 >
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all"
-                >
+                <button type="submit" className="save-modal-btn">
                   Salvar
                 </button>
               </div>
