@@ -89,7 +89,7 @@ const Diagnosis = ({ state, setState }: PageProps) => {
       </header>
 
       <div className="search-card">
-        <form onSubmit={handleSearch} className="search-form">
+        <form onSubmit={handleSearch} className="diagnosis-search-form">
           <div className="input-container">
             <Activity className="input-icon" size={20} />
             <input

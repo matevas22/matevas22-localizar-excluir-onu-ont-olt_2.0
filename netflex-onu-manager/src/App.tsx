@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import "./styles/App.css";
 import { Loader2 } from "lucide-react";
 import api from "./services/api";
 
@@ -19,10 +20,8 @@ import OLTManager from "./pages/OLTManager";
 import Profile from "./pages/Profile";
 import AdminPanel from "./pages/AdminPanel";
 
-// Components
 import Sidebar from "./components/Sidebar";
 
-// Types
 import { UserData, PageState } from "./types";
 
 interface LoginPayload {
@@ -34,7 +33,6 @@ const AppContent = () => {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Background state for Locate and Diagnosis pages
   const [locateState, setLocateState] = useState<PageState>({
     sn: "",
     loading: false,
@@ -94,8 +92,8 @@ const AppContent = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <Loader2 className="animate-spin text-emerald-500" size={48} />
+      <div className="app-loading-container">
+        <Loader2 className="app-loader-icon" size={48} />
       </div>
     );
   }
@@ -110,12 +108,12 @@ const AppContent = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-black text-white font-sans selection:bg-emerald-500/30">
+    <div className="app-layout">
       <Sidebar user={user} onLogout={handleLogout} />
 
-      <main className="flex-1 lg:ml-0 w-full min-w-0 flex flex-col h-screen overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
-          <div className="max-w-7xl mx-auto pb-20 lg:pb-0">
+      <main className="app-main">
+        <div className="app-content-wrapper custom-scrollbar">
+          <div className="app-container">
             <Routes>
               <Route path="/home" element={<Dashboard />} />
               <Route

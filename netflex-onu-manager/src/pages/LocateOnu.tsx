@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -96,7 +96,7 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       </header>
 
       <div className="search-section">
-        <form onSubmit={handleSearch} className="search-form">
+        <form onSubmit={handleSearch} className="locate-search-form">
           <div className="input-wrapper">
             <Search className="search-icon" size={20} />
             <input

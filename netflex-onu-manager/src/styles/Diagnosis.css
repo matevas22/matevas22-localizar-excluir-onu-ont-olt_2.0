@@ -4,6 +4,41 @@
   gap: 2rem;
 }
 
+@media (max-width: 768px) {
+  .diagnosis-container {
+    gap: 1.5rem;
+  }
+
+  .diagnosis-header h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .diagnosis-header p {
+    font-size: 0.875rem;
+  }
+
+  .search-card {
+    padding: 1.25rem;
+  }
+
+  .diagnosis-search-form {
+    flex-direction: column;
+  }
+
+  .input-container {
+    width: 100%;
+  }
+
+  .button-group {
+    width: 100%;
+  }
+
+  .diagnosis-submit-btn {
+    width: 100%;
+  }
+}
+
 .diagnosis-header h1 {
   font-size: 1.875rem;
   line-height: 2.25rem;
@@ -24,17 +59,17 @@
   padding: 1.5rem;
 }
 
-.search-form {
+.diagnosis-search-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1rem;
-  width: 97.5%; 
-  box-sizing: border-box; 
+  width: 97.5%;
+  box-sizing: border-box;
 }
 
 @media (min-width: 1024px) {
-  .search-form {
+  .diagnosis-search-form {
     flex-direction: row;
   }
 }
@@ -42,7 +77,7 @@
 .input-container {
   flex: 1;
   position: relative;
-  min-width: 0; 
+  min-width: 0;
 }
 
 .input-icon {

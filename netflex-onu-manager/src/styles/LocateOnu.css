@@ -5,6 +5,13 @@
   padding-bottom: 5rem;
 }
 
+@media (max-width: 768px) {
+  .locate-container {
+    gap: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
 @media (min-width: 1024px) {
   .locate-container {
     padding-bottom: 0;
@@ -44,7 +51,7 @@
   }
 }
 
-.search-form {
+.locate-search-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -52,7 +59,7 @@
 }
 
 @media (min-width: 1024px) {
-  .search-form {
+  .locate-search-form {
     flex-direction: row;
   }
 }

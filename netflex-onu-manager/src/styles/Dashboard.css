@@ -16,10 +16,9 @@
 }
 
 .dashboard-subtitle {
-  color: #a1a1aa; /* zinc-400 */
+  color: #a1a1aa; 
 }
 
-/* Stats Cards */
 .stats-grid {
   display: grid;
   grid-template-columns: 1fr;
