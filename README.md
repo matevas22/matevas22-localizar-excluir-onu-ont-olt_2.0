@@ -119,6 +119,11 @@ O sistema já vem configurado com valores padrão para desenvolvimento em `backe
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests.
 
+## Para producion
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build         
+   ```
+
 ## Licença
 
 Este projeto é proprietário e desenvolvido para uso interno.
