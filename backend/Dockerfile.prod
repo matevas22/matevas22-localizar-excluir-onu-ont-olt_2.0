@@ -1,0 +1,21 @@
+FROM python:3.11.2-slim
+
+WORKDIR /app
+
+COPY backend/requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install gunicorn
+
+COPY backend/ /app/backend
+ENV PYTHONPATH=/app
+
+# Create database directory
+RUN mkdir -p /app/database
+
+ENV FLASK_APP=backend.app
+ENV FLASK_RUN_HOST=0.0.0.0
+
+EXPOSE 5000
+
+CMD ["gunicorn", "-w", "4", "backend.app:create_app()", "-b", "0.0.0.0:5000"]

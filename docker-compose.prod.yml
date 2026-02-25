@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile.prod
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./database:/app/database
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+    networks:
+      - app-network
+    restart: always
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./netflex-onu-manager/Dockerfile.prod
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: always
+
+networks:
+  app-network:
+    driver: bridge
