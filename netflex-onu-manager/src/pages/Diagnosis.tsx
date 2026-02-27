@@ -5,28 +5,21 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import api from "../services/api";
 import { PageProps } from "../types";
+import { getRecentSns, addRecentSn } from "../utils/recentSns";
 import "../styles/Diagnosis.css";
 
 const Diagnosis = ({ state, setState }: PageProps) => {
-  const { sn, loading, result } = state;
+  const { sn, loading, result: rawResult } = state;
+  // Ensure we only work with a single OnuResult object here for now
+  const result = (rawResult && !Array.isArray(rawResult)) ? rawResult : null;
+  
   const location = useLocation();
-  const [recentSns, setRecentSns] = useState<string[]>([]);
-
-  useEffect(() => {
-    api
-      .get("/user/recent-sns")
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setRecentSns(res.data);
-        }
-      })
-      .catch((err) => console.error("Erro ao carregar SNs recentes", err));
-  }, []);
+  const [recentSns, setRecentSns] = useState<string[]>(() => getRecentSns());
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const snParam = params.get("sn");
-    if (snParam && snParam !== sn && !loading && !result) {
+    if (snParam && snParam !== sn && !loading && !rawResult) {
       setState((prev) => ({ ...prev, sn: snParam }));
       fetchDiagnosis(snParam);
     }
@@ -44,6 +37,8 @@ const Diagnosis = ({ state, setState }: PageProps) => {
       const res = await api.get(`/onu/signal/${searchSn}`, {
         signal: controller.signal,
       });
+      addRecentSn(searchSn);
+      setRecentSns(getRecentSns());
       setState((prev) => ({ ...prev, result: res.data, loading: false }));
     } catch (err: any) {
       if (axios.isCancel(err)) {
@@ -145,7 +140,7 @@ const Diagnosis = ({ state, setState }: PageProps) => {
         )}
       </div>
 
-      {result && result.signals && (
+      {result && !Array.isArray(result) && result.signals && (
         <div className="results-grid">
           <div className="signal-card">
             <p className="detail-label">Sinal RX ONU</p>

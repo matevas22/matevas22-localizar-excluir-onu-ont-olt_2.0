@@ -26,7 +26,7 @@ export interface OnuResult {
 export interface PageState {
   sn: string;
   loading: boolean;
-  result: OnuResult | null;
+  result: OnuResult[] | OnuResult | null;
   controller: AbortController | null;
 }
 

@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./styles/App.css";
 import { Loader2 } from "lucide-react";
 import api from "./services/api";
+import { clearRecentSns } from "./utils/recentSns";
 
 // Pages
 import LoginPage from "./pages/LoginPage";
@@ -86,6 +87,7 @@ const AppContent = () => {
   };
 
   const handleLogout = () => {
+    clearRecentSns();
     localStorage.clear();
     setUser(null);
   };

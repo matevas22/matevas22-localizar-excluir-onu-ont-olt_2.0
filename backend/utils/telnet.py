@@ -23,46 +23,57 @@ def get_credentials(host_ip):
 def send_command(host, commands, username=None, password=None):
     if not username or not password:
         try:
-            username, password = get_credentials(host)
+            u, p = get_credentials(host)
+            if not username: username = u
+            if not password: password = p
         except: 
             pass 
-    
-    uname = username
-    pwd = password
 
-    if not uname or not pwd:
+    if not username or not password:
         print(f"[{host}] Missing credentials (username or password).")
         return None
 
     try:
-        tn = telnetlib.Telnet(host, 23, timeout=3)
+        tn = telnetlib.Telnet(host, 23, timeout=5)
         
-        idx, match, initial_output = tn.expect([b"Login:", b"Username:", b"User:"], timeout=3)
+        idx, match, data = tn.expect([b"[Ll]ogin:", b"[Uu]sername:", b"[Uu]ser:"], timeout=5)
         
         if idx == -1:
-            print(f"[{host}] Login prompt not found (timeout).")
+            print(f"[{host}] Login prompt not found (timeout). Data: {data}")
             tn.close()
             return None
 
-        tn.write(uname.encode('ascii') + b"\n")
+        tn.write(username.encode('ascii') + b"\n")
 
-        tn.read_until(b"Password: ", timeout=3)
-        tn.write(pwd.encode('ascii') + b"\n")
+        idx, match, data = tn.expect([b"[Pp]assword:"], timeout=5)
+        if idx == -1:
+            print(f"[{host}] Password prompt not found. Data: {data}")
+            tn.close()
+            return None
 
-        res = tn.read_until(b"#", timeout=3)
+        tn.write(password.encode('ascii') + b"\n")
+
+        idx, match, data = tn.expect([b">", b"#"], timeout=5)
+        if idx == -1:
+            print(f"[{host}] Shell prompt not found after login. Data: {data}")
+            tn.close()
+            return None
         
-        tn.write(b"terminal-length 0\n") 
-        tn.read_until(b"#", timeout=2)
+        current_prompt = match.group(0).decode('ascii')
+        prompt_char = current_prompt.strip()[-1]
+
+        if prompt_char == '>':
+             tn.write(b"enable\n")
+             tn.read_until(b"#", timeout=3)
+        
         tn.write(b"terminal length 0\n")
-        tn.read_until(b"#", timeout=1)
-        tn.write(b"idle-timeout 0\n")
-        tn.read_until(b"#", timeout=1)
+        tn.read_until(b"#", timeout=2)
         
         results = []
 
         for cmd in commands:
             tn.write(cmd.encode('ascii') + b"\n")
-            raw_bytes = tn.read_until(b"#", timeout=5)
+            raw_bytes = tn.read_until(b"#", timeout=10) 
             out = raw_bytes.decode('ascii', errors='ignore')
             results.append(out)
         
@@ -77,40 +88,49 @@ def send_command(host, commands, username=None, password=None):
 def search_onu_on_olt(host, sn_onu, username=None, password=None):
     if not username or not password:
         try:
-            username, password = get_credentials(host)
-        except: pass
+             u, p = get_credentials(host)
+             if not username: username = u
+             if not password: password = p
+        except: 
+             pass
     
-    uname = username
-    pwd = password
-    
-    if not uname or not pwd:
+    if not username or not password:
         return None
 
     try:
-        tn = telnetlib.Telnet(host, 23, timeout=3)
+        tn = telnetlib.Telnet(host, 23, timeout=5)
         
-        idx, match, initial_output = tn.expect([b"Login:", b"Username:", b"User:"], timeout=3)
+        idx, match, initial_output = tn.expect([b"[Ll]ogin:", b"[Uu]sername:", b"[Uu]ser:"], timeout=5)
         if idx == -1:
             tn.close()
             return None
 
-        tn.write(uname.encode('ascii') + b"\n")
+        tn.write(username.encode('ascii') + b"\n")
         
-        tn.read_until(b"Password: ", timeout=3)
-        tn.write(pwd.encode('ascii') + b"\n")
-        
-        login_res = tn.read_until(b"#", timeout=3)
-        if b"#" not in login_res:
+        idx, match, data = tn.expect([b"[Pp]assword:"], timeout=5)
+        if idx == -1:
              tn.close()
              return None
+        
+        tn.write(password.encode('ascii') + b"\n")
+        
+        idx, match, data = tn.expect([b">", b"#"], timeout=5)
+        if idx == -1:
+             tn.close()
+             return None
+             
+        current_prompt = match.group(0).decode('ascii').strip()
+        if current_prompt.endswith('>'):
+             tn.write(b"enable\n")
+             tn.read_until(b"#", timeout=3)
 
-        tn.write(b"terminal-length 0\n")
-        tn.read_until(b"#", timeout=1)
+        tn.write(b"terminal length 0\n")
+        tn.read_until(b"#", timeout=2)
 
         cmd = f"show gpon onu by sn {sn_onu}"
         tn.write(cmd.encode('ascii') + b"\n")
         
-        raw_bytes = tn.read_until(b"#", timeout=4)
+        raw_bytes = tn.read_until(b"#", timeout=10) 
         output = raw_bytes.decode('ascii', errors='ignore')
         
         tn.write(b"exit\n")
@@ -122,4 +142,5 @@ def search_onu_on_olt(host, sn_onu, username=None, password=None):
         return None
 
     except Exception as e:
+        print(f"Error searching ONU on {host}: {e}")
         return None

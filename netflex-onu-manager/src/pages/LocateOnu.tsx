@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -14,23 +14,13 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import api from "../services/api";
 import { PageProps } from "../types";
+import { getRecentSns, addRecentSn } from "../utils/recentSns";
 import "../styles/LocateOnu.css";
 
 const LocateOnu = ({ state, setState }: PageProps) => {
   const { sn, loading, result, controller } = state;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [recentSns, setRecentSns] = useState<string[]>([]);
-
-  useEffect(() => {
-    api
-      .get("/user/recent-sns")
-      .then((res) => {
-        if (Array.isArray(res.data)) {
-          setRecentSns(res.data);
-        }
-      })
-      .catch((err) => console.error("Erro ao carregar SNs recentes", err));
-  }, []);
+  const [recentSns, setRecentSns] = useState<string[]>(() => getRecentSns());
 
   const setSn = (value: string) => {
     setState((prev) => ({ ...prev, sn: value.toUpperCase() }));
@@ -58,6 +48,8 @@ const LocateOnu = ({ state, setState }: PageProps) => {
         { sn: cleanSn },
         { signal: newController.signal },
       );
+      addRecentSn(cleanSn);
+      setRecentSns(getRecentSns());
       setState((prev) => ({ ...prev, result: res.data, loading: false }));
     } catch (err: any) {
       if (axios.isCancel(err)) {
@@ -77,14 +69,15 @@ const LocateOnu = ({ state, setState }: PageProps) => {
   };
 
   const handleDelete = async () => {
-    if (!result) return;
+    if (!result || !Array.isArray(result) || result.length === 0) return;
+    const targetSn = result[0].sn;
     try {
-      await api.delete(`/onu/${result.sn}`);
-      toast.success("ONU excluída com sucesso!");
+      await api.delete(`/onu/${targetSn}`);
+      toast.success(`ONU ${targetSn} excluída de todas as interfaces!`);
       setState((prev) => ({ ...prev, result: null }));
       setShowDeleteModal(false);
     } catch (err: any) {
-      toast.error("Erro ao excluir ONU");
+      toast.error("Erro ao excluir ONU: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -142,77 +135,83 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       </div>
 
       <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="result-card"
-          >
-            <div className="result-header">
-              <div className="result-title">
-                <h3>
-                  <CheckCircle2 className="success-icon" size={20} />
-                  Equipamento Localizado
-                </h3>
-                <p className="result-sn">{result.sn}</p>
-              </div>
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="delete-btn"
+        {result && Array.isArray(result) && result.length > 0 && (
+          <div className="results-list">
+             {result.map((item) => (
+              <motion.div
+                key={`${item.ip}-${item.interface}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="result-card"
+                style={{marginBottom: '1rem'}}
               >
-                <Trash2 size={16} />
-                Excluir ONU
-              </button>
-            </div>
-
-            <div className="result-details">
-              <div className="detail-item">
-                <p className="detail-label">OLT</p>
-                <p className="detail-value">{result.olt}</p>
-                <p className="detail-mono">{result.ip}</p>
-              </div>
-              <div className="detail-item">
-                <p className="detail-label">Interface</p>
-                <p className="detail-mono">{result.interface}</p>
-              </div>
-              <div className="detail-item">
-                <p className="detail-label">Status</p>
-                <div className="status-indicator">
-                  <div
-                    className={`status-dot ${
-                      result.status === "Working"
-                        ? "status-working"
-                        : "status-error"
-                    }`}
-                  />
-                  <p
-                    className={`status-text ${
-                      result.status === "Working"
-                        ? "text-working"
-                        : "text-error"
-                    }`}
+                <div className="result-header">
+                  <div className="result-title">
+                    <h3>
+                      <CheckCircle2 className="success-icon" size={20} />
+                      Equipamento Localizado
+                    </h3>
+                    <p className="result-sn">{item.sn}</p>
+                  </div>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="delete-btn"
                   >
-                    {result.status === "Working" ? "Operando" : result.status}
-                  </p>
+                    <Trash2 size={16} />
+                    Excluir (Todas)
+                  </button>
                 </div>
-              </div>
-              <div className="detail-item">
-                <p className="detail-label">Ação</p>
-                <Link
-                  to={`/diagnosis?sn=${result.sn}`}
-                  className="diagnosis-link"
-                >
-                  Ver Diagnóstico <Activity size={14} />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
+
+                <div className="result-details">
+                  <div className="detail-item">
+                    <p className="detail-label">OLT</p>
+                    <p className="detail-value">{item.olt}</p>
+                    <p className="detail-mono">{item.ip}</p>
+                  </div>
+                  <div className="detail-item">
+                    <p className="detail-label">Interface</p>
+                    <p className="detail-mono">{item.interface}</p>
+                  </div>
+                  <div className="detail-item">
+                    <p className="detail-label">Status</p>
+                    <div className="status-indicator">
+                      <div
+                        className={`status-dot ${
+                          item.status === "Working"
+                            ? "status-working"
+                            : "status-error"
+                        }`}
+                      />
+                      <p
+                        className={`status-text ${
+                          item.status === "Working"
+                            ? "text-working"
+                            : "text-error"
+                        }`}
+                      >
+                        {item.status === "Working" ? "Operando" : item.status}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="detail-item">
+                    <p className="detail-label">Ação</p>
+                    <Link
+                      to={`/diagnosis?sn=${item.sn}`}
+                      className="diagnosis-link"
+                    >
+                      Ver Diagnóstico <Activity size={14} />
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
       </AnimatePresence>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
+      {showDeleteModal && result && Array.isArray(result) && result.length > 0 && (
         <div className="modal-overlay">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -225,9 +224,10 @@ const LocateOnu = ({ state, setState }: PageProps) => {
             <h3 className="modal-title">Confirmar Exclusão</h3>
             <p className="modal-desc">
               Você está prestes a excluir o equipamento{" "}
-              <span className="modal-highlight">{result?.sn}</span> da interface{" "}
-              <span className="modal-highlight">{result?.interface}</span>. Esta
-              ação não pode ser desfeita.
+              <span className="modal-highlight">{result[0].sn}</span> de{" "}
+              <span className="modal-highlight">{result.length} interface(s)</span> encontrada(s).
+              <br/>
+              Esta ação removerá o dispositivo de TODAS as interfaces listadas e não pode ser desfeita.
             </p>
             <div className="modal-actions">
               <button

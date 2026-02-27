@@ -74,7 +74,7 @@ def locate_onu_endpoint():
     
     olt_data_list = get_olts_with_credentials()
     
-    found_onu = None
+    found_onus = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         future_to_idx = {
@@ -102,85 +102,80 @@ def locate_onu_endpoint():
                             parts = line.split()
                             for part in parts:
                                 if part.startswith("gpon-onu_"):
-                                    found_onu = {
+                                    found_onus.append({
                                         "olt_ip": c_ip,
                                         "olt_name": c_name,
                                         "interface": part,
                                         "raw_line": line,
                                         "username": olt_data_list[idx]['username'],
                                         "password": olt_data_list[idx]['password']
-                                    }
-                                    break
-                        if found_onu: break
-                
-                if found_onu:
-                    for f in future_to_idx:
-                        f.cancel()
-                    break
-
+                                    })
             except Exception as exc:
                 print(f'{olt_data_list[idx]["ip"]} generated an exception: {exc}')
 
-    if not found_onu:
+    if not found_onus:
         return jsonify({"error": "ONU not found on any OLT"}), 404
     
-    olt_ip = found_onu['olt_ip']
-    interface = found_onu['interface']
-    c_user = found_onu['username']
-    c_pass = found_onu['password']
+    results = []
 
-    status = "Unknown"
-    rx_onu = -99.9 
-    tx_olt = -99.9  
-    rx_olt = -99.9 
-    tx_onu = -99.9 
-    
-    cmd_detail = f"show gpon onu detail-info {interface}"
-    cmd_rx_onu = f"show pon power onu-rx {interface}"
-    cmd_rx_olt = f"show pon power olt-rx {interface}"
-    
-    commands = [cmd_detail, cmd_rx_onu, cmd_rx_olt]
-    command_outputs = send_command(olt_ip, commands, c_user, c_pass)
-    
-    if command_outputs and len(command_outputs) >= 3:
-        detail_output = command_outputs[0]
-        rx_output = command_outputs[1]
-        olt_rx_output = command_outputs[2]
+    for onu_data in found_onus:
+        olt_ip = onu_data['olt_ip']
+        interface = onu_data['interface']
+        c_user = onu_data['username']
+        c_pass = onu_data['password']
 
-        phase_match = re.search(r"Phase state:\s+(\w+)", detail_output, re.IGNORECASE)
-        if phase_match:
-            status = phase_match.group(1)
-            
-        rx_match = re.search(r"Rx\s*power\s*:\s*(-?\d+\.?\d*)", rx_output, re.IGNORECASE)
-        if not rx_match:
-             rx_match = re.search(r"(-?\d+\.\d+)", rx_output)
-             
-        if rx_match:
-            rx_onu = float(rx_match.group(1))
+        status = "Unknown"
+        rx_onu = -99.9 
+        tx_olt = -99.9  
+        rx_olt = -99.9 
+        tx_onu = -99.9 
+        
+        cmd_detail = f"show gpon onu detail-info {interface}"
+        cmd_rx_onu = f"show pon power onu-rx {interface}"
+        cmd_rx_olt = f"show pon power olt-rx {interface}"
+        
+        commands = [cmd_detail, cmd_rx_onu, cmd_rx_olt]
+        command_outputs = send_command(olt_ip, commands, c_user, c_pass)
+        
+        if command_outputs and len(command_outputs) >= 3:
+            detail_output = command_outputs[0]
+            rx_output = command_outputs[1]
+            olt_rx_output = command_outputs[2]
 
-        olt_rx_match = re.search(r"(-?\d+\.\d+)", olt_rx_output)
-        if olt_rx_match:
-            rx_olt = float(olt_rx_match.group(1))
+            phase_match = re.search(r"Phase state:\s+(\w+)", detail_output, re.IGNORECASE)
+            if phase_match:
+                status = phase_match.group(1)
+                
+            rx_match = re.search(r"Rx\s*power\s*:\s*(-?\d+\.?\d*)", rx_output, re.IGNORECASE)
+            if not rx_match:
+                rx_match = re.search(r"(-?\d+\.\d+)", rx_output)
+                
+            if rx_match:
+                rx_onu = float(rx_match.group(1))
 
-    desc, color = get_status_info(status)
+            olt_rx_match = re.search(r"(-?\d+\.\d+)", olt_rx_output)
+            if olt_rx_match:
+                rx_olt = float(olt_rx_match.group(1))
 
-    response = {
-        "sn": sn,
-        "olt": found_onu['olt_name'],
-        "ip": olt_ip,
-        "interface": interface,
-        "status": status,
-        "status_description": desc,
-        "status_color": color,
-        "signals": {
-            "rxOnu": rx_onu,
-            "txOnu": 2.2,
-            "rxOlt": rx_olt,
-            "txOlt": 3.5 
-        }
-    }
+        desc, color = get_status_info(status)
 
-    return jsonify(response)
+        results.append({
+            "sn": sn,
+            "olt": onu_data['olt_name'],
+            "ip": olt_ip,
+            "interface": interface,
+            "status": status,
+            "status_description": desc,
+            "status_color": color,
+            "signals": {
+                "rxOnu": rx_onu,
+                "txOnu": 2.2,
+                "rxOlt": rx_olt,
+                "txOlt": 3.5 
+            }
+        })
+
+    return jsonify(results)
 
 @onu_bp.route('/signal/<sn>', methods=['GET'])
 @jwt_required()
@@ -387,31 +382,104 @@ def check_signal():
     
     return jsonify({"logs": logs})
 
-@onu_bp.route('/delete', methods=['DELETE'])
-def delete_onu():
-    data = request.json
-    olt_ip = data.get('olt_ip')
-    interface = data.get('interface')
+@onu_bp.route('/<sn>', methods=['DELETE'])
+@jwt_required()
+def delete_onu_by_sn(sn):
+    print(f"DEBUG: Deleting ONU with SN: {sn} from ALL interfaces")
     
-    if not olt_ip or not interface:
-        return jsonify({"error": "Missing info"}), 400
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    username = user.username if user else "Unknown"
+    
+    olt_data_list = get_olts_with_credentials()
+    found_onus = []
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        future_to_idx = {
+            executor.submit(
+                search_onu_on_olt, 
+                d['ip'], 
+                sn, 
+                d['username'], 
+                d['password']
+            ): i 
+            for i, d in enumerate(olt_data_list)
+        }
+        
+        for future in concurrent.futures.as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                raw_output = future.result()
+                if raw_output:
+                    c_ip = olt_data_list[idx]['ip']
+                    lines = raw_output.split('\n')
+                    for line in lines:
+                        # Ex: gpon-onu_1/2/1:1
+                        if "gpon-onu_" in line and not line.strip().startswith(f"show gpon onu by sn {sn}"):
+                            parts = line.split()
+                            for part in parts:
+                                if part.startswith("gpon-onu_"):
+                                    found_onus.append({
+                                        "olt_ip": c_ip,
+                                        "interface": part,
+                                        "username": olt_data_list[idx]['username'],
+                                        "password": olt_data_list[idx]['password']
+                                    })
+            except Exception as exc:
+                print(f"Error searching {olt_data_list[idx]['ip']}: {exc}")
+    
+    if not found_onus:
+        return jsonify({"error": "ONU não encontrada para exclusão"}), 404
 
-    try:
-        match = re.search(r"gpon-onu_(.*?):(\d+)", interface)
-        if match:
-            gpon_interface = f"gpon-olt_{match.group(1)}"
-            onu_index = match.group(2)
+    results_log = []
+    success_count = 0
+    
+    for item in found_onus:
+        interface_full = item['interface']
+        match = re.search(r"gpon-onu_(.*?):(\d+)", interface_full)
+        
+        if not match:
+            results_log.append(f"Interface inválida: {interface_full} na OLT {item['olt_ip']}")
+            continue
             
-            commands = [
-                "conf t",
-                f"interface {gpon_interface}",
-                f"no onu {onu_index}",
-                "exit"
-            ]
+        gpon_port = match.group(1) # ex: 1/1/1
+        onu_id = match.group(2)    # ex: 2
+        
+        commands = [
+            "conf t",
+            f"interface gpon-olt_{gpon_port}",
+            f"no onu {onu_id}",
+            "exit",
+            "exit"
+        ]
+        
+        try:
+            send_command(
+                item['olt_ip'], 
+                commands, 
+                item['username'], 
+                item['password']
+            )
+            success_count += 1
+            results_log.append(f"Removido de {item['olt_ip']} interface {interface_full}")
             
-            send_command(olt_ip, commands)
-            return jsonify({"msg": "ONU deletion command sent"}), 200
-        else:
-            return jsonify({"error": "Invalid interface format"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            results_log.append(f"Erro ao remover de {item['olt_ip']} interface {interface_full}: {str(e)}")
+
+    log_detail = "; ".join(results_log)
+    log = Log(
+        username=username,
+        action=f"Excluiu ONU: {sn}",
+        ip_address=request.remote_addr,
+        system_info=str(request.user_agent),
+        details=f"Tentativa de remoção em {len(found_onus)} locais. {log_detail}"
+    )
+    db.session.add(log)
+    db.session.commit()
+
+    if success_count > 0:
+        return jsonify({"message": f"Operação concluída. {success_count}/{len(found_onus)} removidas com sucesso.", "details": results_log}), 200
+    else:
+        return jsonify({"error": "Falha ao remover ONU de todas as interfaces encontradas.", "details": results_log}), 500
+
+
