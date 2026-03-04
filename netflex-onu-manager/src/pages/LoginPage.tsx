@@ -109,7 +109,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
         </form>
 
         <div className="login-footer">
-          <p className="footer-text">© 2024 Netflex Telecom • v1.0.0</p>
+          <p className="footer-text">© 2025 Netflex</p>
         </div>
       </motion.div>
     </div>

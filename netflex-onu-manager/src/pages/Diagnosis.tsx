@@ -10,7 +10,6 @@ import "../styles/Diagnosis.css";
 
 const Diagnosis = ({ state, setState }: PageProps) => {
   const { sn, loading, result: rawResult } = state;
-  // Ensure we only work with a single OnuResult object here for now
   const result = (rawResult && !Array.isArray(rawResult)) ? rawResult : null;
   
   const location = useLocation();

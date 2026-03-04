@@ -6,11 +6,15 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False) 
+    type_user = db.Column(db.String(20), nullable=False, default='tech')
+
     def to_dict(self):
+        user_type = self.type_user if self.type_user in ('admin', 'tech') else 'tech'
         return {
             'id': self.id,
             'username': self.username,
-            'role': 'admin' if self.username == 'admin' else 'tech'
+            'role': user_type,
+            'type_user': user_type
         }
 
 class Log(db.Model):

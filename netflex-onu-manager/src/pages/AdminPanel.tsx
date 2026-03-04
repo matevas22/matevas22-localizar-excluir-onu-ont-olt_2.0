@@ -27,6 +27,7 @@ const AdminPanel = () => {
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editUsername, setEditUsername] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [editRole, setEditRole] = useState("tech");
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showEditPassword, setShowEditPassword] = useState(false);
@@ -64,22 +65,34 @@ const AdminPanel = () => {
         username: newUsername,
         password: newPassword,
         role: newRole,
+        type_user: newRole,
+        nivel: newRole,
       });
       toast.success("Usuário criado com sucesso");
       setNewUsername("");
       setNewPassword("");
       fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Erro ao criar usuário");
+      toast.error(
+        err.response?.data?.error ||
+          "Erro ao criar usuário, (Usuario já existe?)",
+      );
     }
   };
 
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+
   const handleDeleteUser = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Deseja realmente excluir este usuário?")) return;
+    setUserToDelete(id);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (userToDelete === null) return;
     try {
-      await api.delete(`/admin/users/${id}`);
+      await api.delete(`/admin/users/${userToDelete}`);
       toast.success("Usuário excluído");
+      setUserToDelete(null);
       fetchData();
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Erro ao excluir");
@@ -90,6 +103,7 @@ const AdminPanel = () => {
     setEditingUser(user);
     setEditUsername(user.username);
     setEditPassword("");
+    setEditRole(user.role || user.type_user || "tech");
   };
 
   const handleUpdateUser = async (e: React.FormEvent) => {
@@ -101,6 +115,13 @@ const AdminPanel = () => {
       if (editUsername !== editingUser.username)
         payload.username = editUsername;
       if (editPassword) payload.password = editPassword;
+
+      const currentRole = editingUser.role || editingUser.type_user || "tech";
+      if (editRole !== currentRole) {
+        payload.role = editRole;
+        payload.type_user = editRole;
+        payload.nivel = editRole;
+      }
 
       if (Object.keys(payload).length === 0) {
         setEditingUser(null);
@@ -195,32 +216,38 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody className="table-body">
-                  {filteredUsers.map((u) => (
-                    <tr
-                      key={u.id}
-                      onClick={() => openEditModal(u)}
-                      className="group"
-                    >
-                      <td className="cell-id">{u.id}</td>
-                      <td className="cell-user">{u.username}</td>
-                      <td>
-                        <span
-                          className={`role-badge ${u.role === "admin" ? "admin" : "tech"}`}
-                        >
-                          {u.role === "admin" ? "Administrador" : "Técnico"}
-                        </span>
-                      </td>
-                      <td className="text-right">
-                        <button
-                          onClick={(e) => handleDeleteUser(u.id, e)}
-                          className="delete-btn"
-                          title="Excluir Usuário"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredUsers.map((u) => {
+                    const userRole = u.role || u.type_user || "tech";
+                    return (
+                      <tr
+                        key={u.id}
+                        onClick={() => openEditModal(u)}
+                        className="group"
+                      >
+                        <td className="cell-id">{u.id}</td>
+                        <td className="cell-user">{u.username}</td>
+                        <td>
+                          <span
+                            className={`role-badge ${userRole === "admin" ? "admin" : "tech"}`}
+                          >
+                            {userRole === "admin" ? "Administrador" : "Técnico"}
+                          </span>
+                        </td>
+                        <td className="text-right">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUserToDelete(u.id);
+                            }}
+                            className="delete-btn"
+                            title="Excluir Usuário"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {filteredUsers.length === 0 && (
@@ -436,6 +463,69 @@ const AdminPanel = () => {
         </div>
       )}
 
+      {/* Delete User Confirmation Modal */}
+      {userToDelete !== null && (
+        <div className="modal-overlay" onClick={() => setUserToDelete(null)}>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="modal-content small"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setUserToDelete(null)}
+              className="close-modal-btn"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="modal-header">
+              <div className="modal-icon-wrapper" style={{ color: "#ef4444" }}>
+                <Trash2 size={24} />
+              </div>
+              <div>
+                <h3 className="modal-title">Confirmar Exclusão</h3>
+                <p className="modal-subtitle">
+                  Esta ação não pode ser desfeita.
+                </p>
+              </div>
+            </div>
+
+            <div className="modal-body">
+              <p style={{ marginBottom: "1.5rem", color: "#f5f5f5" }}>
+                Deseja realmente excluir o usuário{" "}
+                <strong>
+                  {users.find((u) => u.id === userToDelete)?.username}
+                </strong>
+                ?
+              </p>
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                className="btn-secondary"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                className="btn-danger"
+                style={{
+                  backgroundColor: "#ef4444",
+                  color: "white",
+                  border: "none",
+                }}
+              >
+                Excluir
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Edit User Modal */}
       {editingUser && (
         <div className="modal-overlay" onClick={() => setEditingUser(null)}>
@@ -497,7 +587,18 @@ const AdminPanel = () => {
                   </button>
                 </div>
               </div>
-
+              {/* campo de type_user  */}
+              <div className="form-group">
+                <label className="form-label">Tipo de Usuário</label>
+                <select
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className="form-input"
+                >
+                  <option value="tech">Técnico</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

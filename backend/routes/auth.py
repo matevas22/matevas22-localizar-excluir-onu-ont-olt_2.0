@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from sqlalchemy import func
 import bcrypt
 from ..database import db
 from ..models import User, Log
@@ -12,7 +13,8 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
+    # Case-insensitive username lookup
+    user = User.query.filter(func.lower(User.username) == func.lower(username)).first()
 
     if user:
         stored_password = user.password

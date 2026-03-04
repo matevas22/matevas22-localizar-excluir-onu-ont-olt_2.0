@@ -53,7 +53,6 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       setState((prev) => ({ ...prev, result: res.data, loading: false }));
     } catch (err: any) {
       if (axios.isCancel(err)) {
-        // Request cancelled
       } else {
         toast.error(err.response?.data?.error || "Erro ao localizar ONU");
         setState((prev) => ({ ...prev, loading: false }));
