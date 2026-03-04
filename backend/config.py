@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 
 class Config:
@@ -8,5 +9,6 @@ class Config:
     JWT_TOKEN_LOCATION = ['headers']
     JWT_HEADER_NAME = 'Authorization'
     JWT_HEADER_TYPE = 'Bearer'
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 
 

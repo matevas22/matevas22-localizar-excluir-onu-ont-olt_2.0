@@ -251,7 +251,9 @@ const AdminPanel = () => {
                 </tbody>
               </table>
               {filteredUsers.length === 0 && (
-                <div className="empty-state">Nenhum usuário encontrado.</div>
+                <div className="empty-state">
+                  Não encontramos o que você busca
+                </div>
               )}
             </div>
           </div>
@@ -480,7 +482,10 @@ const AdminPanel = () => {
             </button>
 
             <div className="modal-header">
-              <div className="modal-icon-wrapper-excluir" style={{ color: "#ef4444" }}>
+              <div
+                className="modal-icon-wrapper-excluir"
+                style={{ color: "#ef4444" }}
+              >
                 <Trash2 size={24} />
               </div>
               <div>
@@ -513,9 +518,7 @@ const AdminPanel = () => {
                 type="button"
                 onClick={confirmDeleteUser}
                 className="btn-danger-excluir"
-                style={{
-                  
-                }}
+                style={{}}
               >
                 Excluir
               </button>
@@ -602,7 +605,6 @@ const AdminPanel = () => {
                   type="button"
                   onClick={() => setEditingUser(null)}
                   className="btn-secondary"
-                  
                 >
                   Cancelar
                 </button>
