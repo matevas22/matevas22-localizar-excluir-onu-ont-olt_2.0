@@ -480,7 +480,7 @@ const AdminPanel = () => {
             </button>
 
             <div className="modal-header">
-              <div className="modal-icon-wrapper" style={{ color: "#ef4444" }}>
+              <div className="modal-icon-wrapper-excluir" style={{ color: "#ef4444" }}>
                 <Trash2 size={24} />
               </div>
               <div>
@@ -505,18 +505,16 @@ const AdminPanel = () => {
               <button
                 type="button"
                 onClick={() => setUserToDelete(null)}
-                className="btn-secondary"
+                className="btn-secondary-excluir"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={confirmDeleteUser}
-                className="btn-danger"
+                className="btn-danger-excluir"
                 style={{
-                  backgroundColor: "#ef4444",
-                  color: "white",
-                  border: "none",
+                  
                 }}
               >
                 Excluir
@@ -604,6 +602,7 @@ const AdminPanel = () => {
                   type="button"
                   onClick={() => setEditingUser(null)}
                   className="btn-secondary"
+                  
                 >
                   Cancelar
                 </button>
