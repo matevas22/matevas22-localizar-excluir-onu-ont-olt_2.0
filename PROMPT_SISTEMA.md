@@ -12,6 +12,7 @@ Crie um sistema web completo de gerenciamento de ONU/ONT (equipamentos de rede G
 2.  **Frontend (React - Single Page Application):**
     - Interface do usuário interativa e responsiva.
     - Consome a API do backend via requisições HTTP (Axios/Fetch).
+    - Sempre com React
 
 ### FUNCIONALIDADES E REQUISITOS:
 
