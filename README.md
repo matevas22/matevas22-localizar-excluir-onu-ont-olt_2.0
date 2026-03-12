@@ -1,4 +1,4 @@
-# Netflex ONU Manager
+# ONU/ONT Manager 
 
 Sistema completo de gerenciamento e diagnóstico para redes GPON (Gigabit Passive Optical Network). O Netflex ONU Manager permite que provedores de internet (ISPs) localizem ONUs, verifiquem níveis de sinal e gerenciem OLTs de forma centralizada e auditável.
 
@@ -11,7 +11,6 @@ Sistema completo de gerenciamento e diagnóstico para redes GPON (Gigabit Passiv
 - **Logs de auditoria** — Registro de todas as ações, incluindo IP de origem, dispositivo e detalhes da operação.
 - **Performance** — Backend assíncrono que consulta múltiplas OLTs em paralelo.
 
-## Tecnologias
 
 ### Frontend
 
