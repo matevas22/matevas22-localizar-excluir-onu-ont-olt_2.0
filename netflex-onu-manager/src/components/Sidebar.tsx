@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { UserData } from "../types";
 import logo from "../img/logo/logo-white.png";
+
 import "../styles/Sidebar.css";
 
 interface SidebarProps {
@@ -156,7 +157,9 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
 
       {/* Mobile Header */}
       <div className="mobile-header">
-        <h2 className="mobile-logo">NETFLEX</h2>
+        {!isCollapsed && (
+            <img src={logo} alt="NETFLEX-" className="sidebar-logo" />
+          )}
         <div className="mobile-avatar">{user.username[0].toUpperCase()}</div>
       </div>
     </>

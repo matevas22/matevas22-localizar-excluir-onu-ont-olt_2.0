@@ -379,3 +379,16 @@
 .quick-link.blue .quick-label {
   color: #60a5fa;
 }
+@media (min-width: 360px) {
+
+  /* .activity-card {
+    width: 59%;
+  }
+  .quick-access-card {
+    width: 59%;
+  } */
+  .mobile-logo-wrapper {
+    display: flex;
+  }
+
+}
