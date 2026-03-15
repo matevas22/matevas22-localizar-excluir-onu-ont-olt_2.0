@@ -160,7 +160,7 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  min-height: 400px;
+  min-height: 45%;
 }
 
 .card-title {
@@ -181,6 +181,24 @@
   flex: 1;
   min-height: 300px;
   width: 100%;
+}
+
+/* Recharts Legend - manter itens dentro do container */
+.recharts-legend-wrapper {
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.recharts-default-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 16px;
+  max-width: 100%;
+}
+
+.recharts-default-legend .recharts-legend-item {
+  max-width: 100%;
 }
 
 .loading-container {
@@ -381,14 +399,18 @@
 }
 @media (min-width: 360px) {
 
-  /* .activity-card {
+  .activity-card {
     width: 59%;
   }
   .quick-access-card {
     width: 59%;
-  } */
+  }
+  .charts-card {
+    width: 59%;
+  }
   .mobile-logo-wrapper {
     display: flex;
+    min-height: 70%;
   }
 
 }

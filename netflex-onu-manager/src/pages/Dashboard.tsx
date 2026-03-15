@@ -320,9 +320,9 @@ const Dashboard = () => {
                     />
                     <Legend
                       verticalAlign="bottom"
-                      height={36}
+                      height={80}
                       iconType="circle"
-                      wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }}
+                      wrapperStyle={{ paddingTop: "20px", fontSize: "12px", width: "100%" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

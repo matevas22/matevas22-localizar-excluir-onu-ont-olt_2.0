@@ -6,7 +6,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../services/api";
 import { UserData } from "../types";
-import logo from "<div className=""></div>/img/logo/logo-white.png";
+import logo from "../img/logo/logo-white.png";
 
 interface LoginPageProps {
   onLogin: (data: { token: string; user: UserData }) => void;
