@@ -31,7 +31,7 @@ Sistema completo de gerenciamento e diagnóstico para redes GPON (Gigabit Passiv
 
 - Docker e Docker Compose
 
-## Estrutura do Projeto
+## Estrutura do Projeto 🫡
 
 ```
 sistema_gerenciamento_ont-onu/
