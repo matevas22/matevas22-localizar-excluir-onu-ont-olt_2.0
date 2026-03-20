@@ -252,14 +252,7 @@ const Diagnosis = ({ state, setState }: PageProps) => {
                 <p
                   className="font-bold"
                   style={{
-                    color:
-                      result.status_color === "emerald"
-                        ? "#10b981"
-                        : result.status_color === "red"
-                          ? "#ef4444"
-                          : result.status_color === "yellow"
-                            ? "#f59e0b"
-                            : "#94a3b8",
+                    color: result.status_color || "#94a3b8",
                   }}
                 >
                   {result.status_description || result.status}

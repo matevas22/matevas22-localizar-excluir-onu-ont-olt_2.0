@@ -16,6 +16,7 @@
   border-radius: 1rem;
   max-width: 42rem;
   width: 100%;
+  max-width: 50%;
   padding: 1.9rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   position: relative;

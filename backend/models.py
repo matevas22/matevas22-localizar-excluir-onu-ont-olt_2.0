@@ -64,7 +64,7 @@ class StatusDescription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     status_code = db.Column(db.String(50), unique=True, nullable=False) 
     description = db.Column(db.String(255), nullable=False) 
-    color = db.Column(db.String(20), default="gray") 
+    color = db.Column(db.String(20), default="#808080") 
 
     def to_dict(self):
         return {

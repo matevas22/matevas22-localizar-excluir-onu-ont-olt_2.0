@@ -20,7 +20,7 @@ const StatusManager = ({
   // Form
   const [statusCode, setStatusCode] = useState("");
   const [description, setDescription] = useState("");
-  const [color, setColor] = useState("gray");
+  const [color, setColor] = useState("#808080");
 
   const fetchStatuses = async () => {
     setLoading(true);
@@ -87,7 +87,7 @@ const StatusManager = ({
     setEditingId(null);
     setStatusCode("");
     setDescription("");
-    setColor("gray");
+    setColor("#808080");
   };
 
   if (!isOpen) return null;
@@ -139,18 +139,54 @@ const StatusManager = ({
                 />
               </div>
               <div>
-                <label className="status-manager-label">Cor</label>
-                <select
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="status-manager-select"
+                <label className="status-manager-label">Cor do Status</label>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    padding: "8px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                  }}
                 >
-                  <option value="gray">Cinza (Padrão)</option>
-                  <option value="green">Verde (Sucesso/Online)</option>
-                  <option value="red">Vermelho (Erro/Offline)</option>
-                  <option value="yellow">Amarelo (Atenção)</option>
-                  <option value="blue">Azul (Info)</option>
-                </select>
+                  <input
+                    type="color"
+                    id="statusColor"
+                    name="statusColor"
+                    value={color.startsWith("#") ? color : "#808080"}
+                    onChange={(e) => setColor(e.target.value)}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      background: "none",
+                    }}
+                  />
+                  <label
+                    htmlFor="statusColor"
+                    style={{
+                      color: "#a1a1aa",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Escolher cor personalizada
+                  </label>
+                  <div
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "50%",
+                      backgroundColor: color,
+                      marginLeft: "auto",
+                      border: "2px solid rgba(255,255,255,0.2)",
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="status-manager-btn-group">
@@ -183,7 +219,8 @@ const StatusManager = ({
                     <div className="status-item-info">
                       <div className="status-item-header">
                         <span
-                          className={`status-item-dot status-dot-${s.color === "green" ? "emerald" : s.color}`}
+                          className="status-item-dot"
+                          style={{ backgroundColor: s.color }}
                         />
                         <span className="status-item-description">
                           {s.description}

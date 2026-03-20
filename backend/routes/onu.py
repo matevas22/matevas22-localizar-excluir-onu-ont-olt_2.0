@@ -85,16 +85,15 @@ def get_olts_with_credentials():
 
 def get_status_info(status_code):
     if not status_code:
-        return status_code, "gray"
+        return status_code, "#808080"
         
-    # Optimistic lookup
     s = StatusDescription.query.filter_by(status_code=status_code).first()
     if not s:
-        s = StatusDescription.query.filter_by(status_code=status_code.lower()).first()
+        s = StatusDescription.query.filter(StatusDescription.status_code.ilike(status_code)).first()
     
     if s:
         return s.description, s.color
-    return status_code, "gray"
+    return status_code, "#808080"
 
 @onu_bp.route('/locate', methods=['POST'])
 @jwt_required()
@@ -392,6 +391,22 @@ def get_onu_signal(sn):
 
 
     desc, color = get_status_info(status)
+
+    # no histórico global
+    try:
+        olt_record = OLT.query.filter_by(ip=olt_ip).first()
+        if olt_record:
+            new_history = SignalHistory(
+                sn=sn,
+                olt_id=olt_record.id,
+                rx_power=rx_onu,
+                tx_power=tx_onu
+            )
+            db.session.add(new_history)
+            db.session.commit()
+    except Exception as e:
+        print(f"Erro ao salvar histórico global: {str(e)}")
+        db.session.rollback()
 
     response = {
         "sn": sn,
