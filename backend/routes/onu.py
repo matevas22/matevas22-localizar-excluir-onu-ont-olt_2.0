@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+﻿from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..utils.telnet import search_onu_on_olt, send_command
 from ..utils.drivers import get_olt_driver
@@ -33,18 +33,12 @@ def onu_checkup():
     try:
         details = driver.get_onu_details(sn)
         if details:
-            # Salva histórico de sinal
-            history = SignalHistory(
-                sn=sn,
-                olt_id=olt.id,
-                rx_power=details.get('rx_power'),
-                tx_power=details.get('tx_power')
-            )
-            db.session.add(history)
-            db.session.commit()
             return jsonify(details), 200
         else:
-            return jsonify({"error": "ONU details not found"}), 404
+            return jsonify({"error": f"ONU {sn} details not found on OLT {olt_ip}"}), 404
+    except Exception as e:
+        print(f"Erro detalhado no checkup: {str(e)}")
+        return jsonify({"error": f"Internal Driver Error: {str(e)}"}), 500
     finally:
         driver.disconnect()
 
@@ -53,7 +47,7 @@ def onu_checkup():
 def get_signal_history(sn):
     from datetime import datetime, timedelta
     
-    # Filtro de 3 meses atrás
+    # Filtro de 3 meses atrÃ¡s
     three_months_ago = datetime.utcnow() - timedelta(days=90)
     
     history = SignalHistory.query.filter(
@@ -399,22 +393,6 @@ def get_onu_signal(sn):
 
     desc, color = get_status_info(status)
 
-    olt_entry = OLT.query.filter_by(ip=olt_ip).first()
-    olt_id = olt_entry.id if olt_entry else None
-
-    try:
-        new_history = SignalHistory(
-            sn=sn,
-            olt_id=olt_id,
-            rx_power=rx_onu if isinstance(rx_onu, (int, float)) and rx_onu != -99.9 else None,
-            tx_power=tx_onu if isinstance(tx_onu, (int, float)) and tx_onu != -99.9 else None
-        )
-        db.session.add(new_history)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print(f"Erro ao salvar histórico automático: {e}")
-
     response = {
         "sn": sn,
         "olt": found_onu['olt_name'],
@@ -510,7 +488,7 @@ def delete_onu_by_sn(sn):
         match = re.search(r"gpon-onu_(.*?):(\d+)", interface_full)
         
         if not match:
-            results_log.append(f"Interface inválida: {interface_full} na OLT {item['olt_ip']}")
+            results_log.append(f"Interface invalida: {interface_full} na OLT {item['olt_ip']}")
             continue
             
         gpon_port = match.group(1) # ex: 1/1/1
@@ -549,8 +527,9 @@ def delete_onu_by_sn(sn):
     db.session.commit()
 
     if success_count > 0:
-        return jsonify({"message": f"Operação concluída. {success_count}/{len(found_onus)} removidas com sucesso.", "details": results_log}), 200
+        return jsonify({"message": f"Operação conclui­da. {success_count}/{len(found_onus)} removidas com sucesso.", "details": results_log}), 200
     else:
         return jsonify({"error": "Falha ao remover ONU de todas as interfaces encontradas.", "details": results_log}), 500
+
 
 

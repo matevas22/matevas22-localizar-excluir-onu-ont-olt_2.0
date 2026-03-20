@@ -7,6 +7,8 @@ export interface UserData {
 }
 
 export interface OnuResult {
+  status_description: string;
+  status_color: string;
   olt_ip: any;
   sn: string;
   olt: string;

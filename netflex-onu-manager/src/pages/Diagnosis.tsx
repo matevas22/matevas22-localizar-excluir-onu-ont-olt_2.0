@@ -1,7 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Activity, Loader2, X, Activity as Pulse, History } from "lucide-react";
-import { toast } from "react-toastify";
+import { Activity, Loader2, X, History } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -10,12 +9,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
+  AreaChart,
+  Area,
 } from "recharts";
+import { toast } from "react-toastify";
 import axios from "axios";
 import api from "../services/api";
 import { PageProps } from "../types";
 import { getRecentSns, addRecentSn } from "../utils/recentSns";
+import "../styles/App.css";
 import "../styles/Diagnosis.css";
 
 const Diagnosis = ({ state, setState }: PageProps) => {
@@ -24,9 +26,9 @@ const Diagnosis = ({ state, setState }: PageProps) => {
 
   const location = useLocation();
   const [recentSns, setRecentSns] = useState<string[]>(() => getRecentSns());
+  const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<any[]>([]);
-  const [checkupLoading, setCheckupLoading] = useState(false);
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -62,39 +64,17 @@ const Diagnosis = ({ state, setState }: PageProps) => {
     }
   };
 
-  const fetchHistory = async (searchSn: string) => {
+  const fetchHistory = async () => {
+    if (!result?.sn) return;
+    setLoadingHistory(true);
+    setShowHistory(true);
     try {
-      const res = await api.get(`/onu/signal-history/` + searchSn);
-      const formatted = res.data.map((h: any) => ({
-        ...h,
-        time: new Date(h.timestamp).toLocaleTimeString(),
-        date: new Date(h.timestamp).toLocaleDateString(),
-      }));
-      setHistoryData(formatted);
-      setShowHistoryModal(true);
+      const res = await api.get(`/onu/signal-history/${result.sn}`);
+      setHistoryData(res.data);
     } catch (err: any) {
-      toast.error("Erro ao obter histórico");
-    }
-  };
-
-  const handleCheckup = async () => {
-    if (!sn || sn.length !== 12 || !result?.olt_ip) {
-      toast.error("Dados da OLT não encontrados para realizar check-up.");
-      return;
-    }
-    setCheckupLoading(true);
-    try {
-      const res = await api.post("/onu/checkup", { sn, olt_ip: result.olt_ip });
-      toast.success("Check-up concluído!");
-      setState((prev) => ({
-        ...prev,
-        result: { ...prev.result, ...res.data },
-      }));
-      fetchHistory(sn);
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Erro no Check-up");
+      toast.error("Erro ao carregar histórico");
     } finally {
-      setCheckupLoading(false);
+      setLoadingHistory(false);
     }
   };
 
@@ -239,23 +219,21 @@ const Diagnosis = ({ state, setState }: PageProps) => {
           </div>
 
           <div className="details-card">
-            <h3 className="details-title">Detalhes Adicionais</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="details-title m-0">Detalhes Adicionais</h3>
+              <button
+                onClick={fetchHistory}
+                className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md transition-colors text-sm border border-zinc-700"
+                title="Ver histórico de sinais"
+              >
+                <History size={16} />
+                Histórico
+              </button>
+            </div>
             <div className="info-grid">
               <div className="info-item">
-                <p className="info-label">TX ONU (Real)</p>
-                <p className="info-value">
-                  {typeof result.signals.txOnu === "number"
-                    ? result.signals.txOnu + " dBm"
-                    : result.signals.txOnu}
-                </p>
-              </div>
-              <div className="info-item">
-                <p className="info-label">TX OLT</p>
-                <p className="info-value">
-                  {typeof result.signals.txOlt === "number"
-                    ? result.signals.txOlt + " dBm"
-                    : result.signals.txOlt}
-                </p>
+                <p className="info-label">TX ONU</p>
+                <p className="info-value">{result.signals.txOnu} dBm</p>
               </div>
               <div className="info-item">
                 <p className="info-label">Distância</p>
@@ -272,9 +250,19 @@ const Diagnosis = ({ state, setState }: PageProps) => {
               <div className="info-item">
                 <p className="info-label">Status ONU</p>
                 <p
-                  className={`font-bold ${result.status?.toLowerCase() === "working" ? "text-emerald-500" : "text-red-500"}`}
+                  className="font-bold"
+                  style={{
+                    color:
+                      result.status_color === "emerald"
+                        ? "#10b981"
+                        : result.status_color === "red"
+                          ? "#ef4444"
+                          : result.status_color === "yellow"
+                            ? "#f59e0b"
+                            : "#94a3b8",
+                  }}
                 >
-                  {result.status}
+                  {result.status_description || result.status}
                 </p>
               </div>
               <div className="info-item">
@@ -282,231 +270,171 @@ const Diagnosis = ({ state, setState }: PageProps) => {
                 <p className="info-value truncate">{result.olt}</p>
               </div>
             </div>
-
-            <div className="diagnosis-actions">
-              <button
-                onClick={handleCheckup}
-                disabled={checkupLoading}
-                className="checkup-btn"
-              >
-                {checkupLoading ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <Pulse size={18} />
-                )}
-                Check-up Avançado
-              </button>
-              <button onClick={() => fetchHistory(sn)} className="history-btn">
-                <History size={18} />
-                Ver Histórico
-              </button>
-            </div>
           </div>
         </div>
       )}
 
-      {showHistoryModal && (
+      {showHistory && (
         <div
-          className="history-modal-overlay"
-          onClick={() => setShowHistoryModal(false)}
+          className="diag-modal-overlay"
+          onClick={() => setShowHistory(false)}
         >
           <div
-            className="history-modal-content"
+            className="diag-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="modal-header"
-              style={{
-                padding: "1.5rem",
-                borderBottom: "1px solid rgba(255,255,255,0.1)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <h2 style={{ margin: 0, color: "#fff" }}>
-                Histórico de Sinais: {sn}
-              </h2>
+            <div className="diag-modal-header">
+              <h3 className="diag-modal-title">
+                Histórico de Sinais - {result?.sn}
+              </h3>
               <button
-                className="close-modal"
-                onClick={() => setShowHistoryModal(false)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "#71717a",
-                  cursor: "pointer",
-                }}
+                className="diag-modal-close"
+                onClick={() => setShowHistory(false)}
               >
-                <X size={24} />
+                <X size={20} />
               </button>
             </div>
+            <div className="diag-modal-body custom-scrollbar">
+              {loadingHistory ? (
+                <div className="flex justify-center p-8">
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : historyData.length > 0 ? (
+                <>
+                  <div className="history-chart-container">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <AreaChart data={[...historyData].reverse()}>
+                        <defs>
+                          <linearGradient
+                            id="colorRx"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#10b981"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#10b981"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id="colorTx"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0.3}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="rgba(255,255,255,0.05)"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="timestamp"
+                          tickFormatter={(str) =>
+                            new Date(str).toLocaleDateString()
+                          }
+                          stroke="#71717a"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          domain={["auto", "auto"]}
+                          stroke="#71717a"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                          unit="dBm"
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#141414",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                          }}
+                          itemStyle={{ color: "#10b981" }}
+                          labelFormatter={(str) =>
+                            new Date(str).toLocaleString()
+                          }
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="rx_power"
+                          name="Sinal RX"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorRx)"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="tx_power"
+                          name="Sinal TX"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorTx)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
 
-            <div
-              className="modal-body"
-              style={{
-                padding: "1.5rem",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "2rem",
-              }}
-            >
-              <div
-                className="chart-container-modal"
-                style={{
-                  background: "rgba(255,255,255,0.02)",
-                  padding: "1rem",
-                  borderRadius: "0.5rem",
-                }}
-              >
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={historyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} />
-                    <YAxis
-                      stroke="#9ca3af"
-                      domain={["dataMin - 2", "dataMax + 2"]}
-                      fontSize={12}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "none",
-                        color: "#fff",
-                      }}
-                    />
-                    <Legend />
-                    <Line
-                      type="monotone"
-                      dataKey="rx_power"
-                      name="RX ONU"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="tx_power"
-                      name="TX ONU"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div
-                className="history-table-wrapper"
-                style={{
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  overflowX: "hidden",
-                  paddingRight: "5px",
-                }}
-              >
-                <table
-                  className="history-table"
-                  style={{
-                    width: "100%",
-                    borderCollapse: "separate",
-                    borderSpacing: "0",
-                    color: "#d1d5db",
-                  }}
-                >
-                  <thead
-                    style={{
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                      backgroundColor: "#18181b",
-                    }}
+                  <div
+                    className="history-table-wrapper"
+                    style={{ maxHeight: "180px", overflowY: "auto" }}
                   >
-                    <tr>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
-                        Data
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
-                        Hora
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
-                        RX Power
-                      </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          padding: "12px",
-                          background: "rgba(255,255,255,0.05)",
-                          borderBottom: "1px solid rgba(255,255,255,0.1)",
-                        }}
-                      >
-                        TX Power
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...historyData].reverse().map((item, idx) => (
-                      <tr key={idx}>
-                        <td
-                          style={{
-                            padding: "12px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
-                          }}
-                        >
-                          {item.date}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
-                          }}
-                        >
-                          {item.time}
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
-                          }}
-                          className={getSignalColor(item.rx_power, "rx")}
-                        >
-                          {item.rx_power.toFixed(2)} dBm
-                        </td>
-                        <td
-                          style={{
-                            padding: "12px",
-                            borderBottom: "1px solid rgba(255,255,255,0.05)",
-                            color: "#3b82f6",
-                          }}
-                        >
-                          {item.tx_power.toFixed(2)} dBm
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    <table className="history-table">
+                      <thead>
+                        <tr>
+                          <th>Data</th>
+                          <th>RX Power (ONU)</th>
+                          <th>TX Power (ONU)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyData.map((h) => (
+                          <tr key={h.id}>
+                            <td>{new Date(h.timestamp).toLocaleString()}</td>
+                            <td
+                              className={getSignalColor(h.rx_power, "rx")}
+                              style={{ fontWeight: "600" }}
+                            >
+                              {h.rx_power?.toFixed(2)} dBm
+                            </td>
+                            <td style={{ color: "#94a3b8" }}>
+                              {h.tx_power?.toFixed(2)} dBm
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <p className="text-center text-zinc-500 p-4">
+                  Nenhum histórico encontrado para este SN.
+                </p>
+              )}
             </div>
           </div>
         </div>
