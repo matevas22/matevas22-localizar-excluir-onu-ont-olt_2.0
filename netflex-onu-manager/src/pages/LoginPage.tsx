@@ -91,7 +91,7 @@ const LoginPage = ({ onLogin }: LoginPageProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="Digite sua senha"
                 required
               />
               <button

@@ -7,6 +7,7 @@ export interface UserData {
 }
 
 export interface OnuResult {
+  olt_ip: any;
   sn: string;
   olt: string;
   ip: string;

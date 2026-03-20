@@ -4,3 +4,4 @@ flask-jwt-extended
 flask-sqlalchemy
 bcrypt
 python-dotenv
+Flask-Migrate

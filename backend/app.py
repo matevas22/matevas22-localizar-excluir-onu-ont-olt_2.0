@@ -21,6 +21,8 @@ def create_app():
     CORS(app)
     jwt = JWTManager(app)
     db.init_app(app)
+    from .database import migrate
+    migrate.init_app(app, db)
 
     with app.app_context():
         db.create_all()

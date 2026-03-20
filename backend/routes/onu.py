@@ -1,12 +1,67 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..utils.telnet import search_onu_on_olt, send_command
-from ..models import StatusDescription, OLT, SystemConfig, Log, User
+from ..utils.drivers import get_olt_driver
+from ..models import StatusDescription, OLT, SystemConfig, Log, User, SignalHistory
 from ..database import db
 import concurrent.futures
 import re
 
 onu_bp = Blueprint('onu', __name__)
+
+@onu_bp.route('/checkup', methods=['POST'])
+@jwt_required()
+def onu_checkup():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    data = request.json
+    sn = data.get('sn')
+    olt_ip = data.get('olt_ip')
+
+    if not sn or not olt_ip:
+        return jsonify({"error": "SN and OLT IP required"}), 400
+
+    olt = OLT.query.filter_by(ip=olt_ip).first()
+    if not olt:
+        return jsonify({"error": "OLT not found"}), 404
+
+    driver = get_olt_driver(olt)
+    if not driver.connect():
+        return jsonify({"error": "Failed to connect to OLT"}), 500
+    
+    try:
+        details = driver.get_onu_details(sn)
+        if details:
+            # Salva histórico de sinal
+            history = SignalHistory(
+                sn=sn,
+                olt_id=olt.id,
+                rx_power=details.get('rx_power'),
+                tx_power=details.get('tx_power')
+            )
+            db.session.add(history)
+            db.session.commit()
+            return jsonify(details), 200
+        else:
+            return jsonify({"error": "ONU details not found"}), 404
+    finally:
+        driver.disconnect()
+
+@onu_bp.route('/signal-history/<sn>', methods=['GET'])
+@jwt_required()
+def get_signal_history(sn):
+    from datetime import datetime, timedelta
+    
+    # Filtro de 3 meses atrás
+    three_months_ago = datetime.utcnow() - timedelta(days=90)
+    
+    history = SignalHistory.query.filter(
+        SignalHistory.sn == sn,
+        SignalHistory.timestamp >= three_months_ago
+    ).order_by(SignalHistory.timestamp.asc()).all()
+    
+    return jsonify([h.to_dict() for h in history]), 200
 
 def get_olts_with_credentials():
     olts = OLT.query.all()
@@ -264,8 +319,8 @@ def get_onu_signal(sn):
     cmd_rx_onu = f"show pon power onu-rx {interface}"
     cmd_rx_olt = f"show pon power olt-rx {interface}"
     cmd_tx_onu = f"show pon power onu-tx {interface}" 
-    cmd_tx_olt = f"show pon power olt-tx {olt_interface}" # Correct command for OLT TX
-    cmd_state = f"show gpon onu state {olt_interface}" # Correct command for ONU State
+    cmd_tx_olt = f"show pon power olt-tx {olt_interface}" 
+    cmd_state = f"show gpon onu state {olt_interface}" 
 
     commands = [cmd_detail, cmd_rx_onu, cmd_rx_olt, cmd_tx_onu, cmd_tx_olt, cmd_state]
     outputs = send_command(olt_ip, commands, c_user, c_pass)
@@ -344,10 +399,26 @@ def get_onu_signal(sn):
 
     desc, color = get_status_info(status)
 
+    olt_entry = OLT.query.filter_by(ip=olt_ip).first()
+    olt_id = olt_entry.id if olt_entry else None
+
+    try:
+        new_history = SignalHistory(
+            sn=sn,
+            olt_id=olt_id,
+            rx_power=rx_onu if isinstance(rx_onu, (int, float)) and rx_onu != -99.9 else None,
+            tx_power=tx_onu if isinstance(tx_onu, (int, float)) and tx_onu != -99.9 else None
+        )
+        db.session.add(new_history)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao salvar histórico automático: {e}")
+
     response = {
         "sn": sn,
         "olt": found_onu['olt_name'],
-        "ip": olt_ip,
+        "olt_ip": olt_ip,
         "interface": interface,
         "status": status,
         "status_description": desc,

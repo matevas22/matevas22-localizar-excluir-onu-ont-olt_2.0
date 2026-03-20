@@ -86,3 +86,22 @@ class SystemConfig(db.Model):
             'value': self.value
         }
 
+class SignalHistory(db.Model):
+    __tablename__ = 'signal_history'
+    id = db.Column(db.Integer, primary_key=True)
+    sn = db.Column(db.String(50), nullable=False, index=True)
+    olt_id = db.Column(db.Integer, db.ForeignKey('olts.id'), nullable=False)
+    rx_power = db.Column(db.Float, nullable=True) # Signal on ONU
+    tx_power = db.Column(db.Float, nullable=True) # Signal from ONU to OLT
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sn': self.sn,
+            'olt_id': self.olt_id,
+            'rx_power': self.rx_power,
+            'tx_power': self.tx_power,
+            'timestamp': self.timestamp.isoformat()
+        }
+

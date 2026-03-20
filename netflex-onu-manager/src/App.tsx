@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 import api from "./services/api";
 import { clearRecentSns } from "./utils/recentSns";
 
-// Pages
+
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import LocateOnu from "./pages/LocateOnu";
