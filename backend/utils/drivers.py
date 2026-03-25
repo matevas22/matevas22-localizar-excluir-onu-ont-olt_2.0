@@ -135,26 +135,40 @@ class ZTEOLT(BaseOLT):
     def get_ports(self):
         if not self.tn: return []
         try:
+            # Garante prompt limpo e desabilita paginação (importante para listas longas)
             self.tn.write(b"\n")
             self._read_until_prompt()
+            self.tn.write(b"terminal length 0\n")
+            self._read_until_prompt()
 
-            self.tn.write(b"show gpon olt-port summary\n")
+            # Tenta múltiplos comandos para listar as portas configuradas
+            all_outputs = ""
             
-            output = self._read_until_prompt()
-            print(f"DEBUG OLT Output:\n{output}\n--- END ---")
+            # Comando 1: Resumo das portas
+            self.tn.write(b"show gpon olt-port summary\n")
+            all_outputs += self._read_until_prompt()
+            
+            # Comando 2: Se o summary vier curto, tenta listar as interfaces
+            self.tn.write(b"show interface gpon-olt_*\n")
+            all_outputs += self._read_until_prompt()
+
+            print(f"DEBUG OLT Total Output:\n{all_outputs}\n--- END RAW ---")
             
             ports = []
             import re
             
-            matches = re.findall(r"(?:gpon-olt_)?(\d+/\d+/\d+)", output)
+            # Regex que busca o padrão 1/1/1, 1/2/1, etc.
+            # Pode estar precedido de gpon-olt_ ou ser apenas o número no início da linha/espaço
+            matches = re.findall(r"(?:gpon-olt_)?(\d+/\d+/\d+)", all_outputs)
             
             for m in matches:
                 port_id = f"gpon-olt_{m}"
                 if port_id not in ports:
                     ports.append(port_id)
             
-            if not ports:
-                print("Fallback: show running-config")
+            # Fallback final: show running-config (às vezes precisa de permissão de admin)
+            if len(ports) <= 1:
+                print("Fallback: Poucas portas encontradas, tentando show running-config...")
                 self.tn.write(b"show running-config | include gpon-olt_\n")
                 output_cfg = self._read_until_prompt()
                 matches_cfg = re.findall(r"gpon-olt_(\d+/\d+/\d+)", output_cfg)
@@ -163,6 +177,7 @@ class ZTEOLT(BaseOLT):
                     if port_id not in ports:
                         ports.append(port_id)
 
+            print(f"DEBUG: Total de portas únicas encontradas: {len(ports)}")
             return sorted(list(set(ports)))
         except Exception as e:
             print(f"Error in get_ports: {e}")
