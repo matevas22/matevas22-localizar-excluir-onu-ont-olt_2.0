@@ -34,7 +34,6 @@ const GerenciaOLT = () => {
   // Estados para Filtros
   const [portSearch, setPortSearch] = useState("");
   const [onuSearch, setOnuSearch] = useState("");
-  const [onuStatusFilter, setOnuStatusFilter] = useState("all");
 
   // Estados para Monitoramento
   const [monitorData, setMonitorData] = useState<any>(null);
@@ -82,13 +81,11 @@ const GerenciaOLT = () => {
     setSelectedPort(null);
     setPortSearch("");
     setOnuSearch("");
-    setOnuStatusFilter("all");
   };
 
   const handleSelectPort = (port: string) => {
     setSelectedPort(port);
     setOnuSearch("");
-    setOnuStatusFilter("all");
   };
 
   const getPhaseColor = (state: string) => {
@@ -122,19 +119,48 @@ const GerenciaOLT = () => {
 
   // Filtrar ONUs
   const filteredOnus = currentOnus.filter((onu: any) => {
+    const searchLower = onuSearch.toLowerCase();
     const matchesSearch =
-      onu.onu_id.toLowerCase().includes(onuSearch.toLowerCase()) ||
-      onu.omcc_state.toLowerCase().includes(onuSearch.toLowerCase());
+      onu.onu_id.toLowerCase().includes(searchLower) ||
+      onu.omcc_state.toLowerCase().includes(searchLower) ||
+      (onu.p_state || onu.phase_state || "")
+        .toLowerCase()
+        .includes(searchLower);
 
-    const matchesStatus =
-      onuStatusFilter === "all" ||
-      (onuStatusFilter === "working" &&
-        onu.phase_state.toLowerCase() === "working") ||
-      (onuStatusFilter === "offline" &&
-        ["offline", "los"].includes(onu.phase_state.toLowerCase()));
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
+
+  // Contadores para o rodapé baseados nos itens filtrados (ou todos da porta)
+  const stats = (filteredOnus.length > 0 ? filteredOnus : currentOnus).reduce(
+    (acc: any, onu: any) => {
+      const pmState = (onu.p_state || onu.phase_state || "").toLowerCase();
+      const omState = (onu.omcc_state || "").toLowerCase();
+
+      // Regras estritas:
+      // Online: phase_state deve ser working OU omcc_state deve ser working
+      const isOnline =
+        pmState.includes("working") || omState.includes("working");
+
+      // Dying: phase_state ou omcc_state deve conter dyinggasp
+      const isDying = pmState.includes("dying") || omState.includes("dying");
+
+      // Offline: se não for nenhum dos acima e contiver 'off' ou 'los'
+      const isOffline =
+        !isOnline &&
+        !isDying &&
+        (pmState.includes("off") ||
+          pmState.includes("los") ||
+          omState.includes("off") ||
+          omState.includes("los"));
+
+      if (isOnline) acc.online++;
+      else if (isDying) acc.dying++;
+      else if (isOffline) acc.offline++;
+
+      return acc;
+    },
+    { online: 0, offline: 0, dying: 0 },
+  );
 
   if (loading) {
     return (
@@ -280,20 +306,11 @@ const GerenciaOLT = () => {
                             <Search size={16} />
                             <input
                               type="text"
-                              placeholder="Filtrar ID ou OMCC..."
+                              placeholder="Filtrar ID, Status ou OMCC..."
                               value={onuSearch}
                               onChange={(e) => setOnuSearch(e.target.value)}
                             />
                           </div>
-                          <select
-                            className="status-select"
-                            value={onuStatusFilter}
-                            onChange={(e) => setOnuStatusFilter(e.target.value)}
-                          >
-                            <option value="all">Todos Status</option>
-                            <option value="working">Online (working)</option>
-                            <option value="offline">Offline/LOS</option>
-                          </select>
                         </div>
                       </div>
 
@@ -354,7 +371,20 @@ const GerenciaOLT = () => {
 
                       {currentOnus.length > 0 && (
                         <div className="onus-footer">
-                          Total de ONUs: {currentOnus.length}
+                          <div className="onus-footer-stats">
+                            <span className="stat-item online">
+                              <b>{stats.online}</b> Online
+                            </span>
+                            <span className="stat-item offline">
+                              <b>{stats.offline}</b> Offline/LOS
+                            </span>
+                            <span className="stat-item dying">
+                              <b>{stats.dying}</b> DyingGasp
+                            </span>
+                            <span className="stat-item total">
+                              Total: <b>{currentOnus.length}</b>
+                            </span>
+                          </div>
                         </div>
                       )}
                     </div>
