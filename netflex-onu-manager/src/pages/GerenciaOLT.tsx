@@ -28,6 +28,8 @@ const GerenciaOLT = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOlt, setSelectedOlt] = useState<any | null>(null);
   const [selectedPort, setSelectedPort] = useState<string | null>(null);
+
+  // Estados para Monitoramento
   const [monitorData, setMonitorData] = useState<any>(null);
 
   useEffect(() => {
@@ -196,21 +198,23 @@ const GerenciaOLT = () => {
                       <p>Aguardando primeiro scan...</p>
                     </div>
                   ) : (
-                    <div className="ports-list">
-                      {currentOltPorts.map((p: any) => (
-                        <button
-                          key={p.port}
-                          className={`port-item ${selectedPort === p.port ? "active" : ""}`}
-                          onClick={() => handleSelectPort(p.port)}
-                        >
-                          <div className="port-item-info">
-                            <span className="port-name">{p.port}</span>
-                            <span className="onu-count-badge">
-                              {p.onus?.length || 0} ONUs
-                            </span>
-                          </div>
-                        </button>
-                      ))}
+                    <div className="ports-column">
+                      <div className="ports-list">
+                        {currentOltPorts.map((p: any) => (
+                          <button
+                            key={p.port}
+                            className={`port-item ${selectedPort === p.port ? "active" : ""}`}
+                            onClick={() => handleSelectPort(p.port)}
+                          >
+                            <div className="port-item-info">
+                              <span className="port-name">{p.port}</span>
+                              <span className="onu-count-badge">
+                                {p.onus?.length || 0} ONUs
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </aside>
@@ -250,7 +254,7 @@ const GerenciaOLT = () => {
                               currentOnus.map((onu: any, i: number) => (
                                 <tr key={i}>
                                   <td>
-                                    <strong>{onu.index}</strong>
+                                    <strong>{onu.onu_id}</strong>
                                   </td>
                                   <td>
                                     <span
@@ -280,6 +284,7 @@ const GerenciaOLT = () => {
                           </tbody>
                         </table>
                       </div>
+
                       {currentOnus.length > 0 && (
                         <div className="onus-footer">
                           Total de ONUs: {currentOnus.length}

@@ -73,7 +73,6 @@
 .olt-manager-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
 }
 
 .olt-header {
@@ -575,26 +574,63 @@
   min-height: 500px;
 }
 
+.olt-details-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+}
+
+.details-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
 .ports-sidebar {
   background: #141414;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 1rem;
+  padding: 1.25rem;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 72%;
+  border-radius: 12px;
 }
 
-.sidebar-title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #71717a;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
+.ports-column {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .ports-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.5rem !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  padding-right: 0.5rem;
+}
+
+.onus-container {
+  padding: 0;
+  background: #18181b;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  height: 100%;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.onus-content {
+  display: flex;
+  flex-direction: column;
+  height: 80%;
+  width: 100%;
 }
 
 .port-item {
@@ -646,7 +682,6 @@
 }
 
 .onus-container {
-  padding: 1.5rem;
   background: #18181b;
 }
 
