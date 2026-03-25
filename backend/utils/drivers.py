@@ -84,19 +84,15 @@ class HuaweiOLT(BaseOLT):
         return data.decode('ascii', errors='ignore')
 
     def get_onu_signal(self, sn):
-        # Implementação específica para Huawei
         pass
 
     def get_onu_details(self, sn):
-        # Implementação específica para Huawei
         pass
 
     def get_ports(self):
-        # Implementação específica para Huawei
         return []
 
     def get_onus_on_port(self, port):
-        # Implementação específica para Huawei
         return []
 
 class ZTEOLT(BaseOLT):
@@ -135,20 +131,16 @@ class ZTEOLT(BaseOLT):
     def get_ports(self):
         if not self.tn: return []
         try:
-            # Garante prompt limpo e desabilita paginação (importante para listas longas)
             self.tn.write(b"\n")
             self._read_until_prompt()
             self.tn.write(b"terminal length 0\n")
             self._read_until_prompt()
 
-            # Tenta múltiplos comandos para listar as portas configuradas
             all_outputs = ""
             
-            # Comando 1: Resumo das portas
             self.tn.write(b"show gpon olt-port summary\n")
             all_outputs += self._read_until_prompt()
             
-            # Comando 2: Se o summary vier curto, tenta listar as interfaces
             self.tn.write(b"show interface gpon-olt_*\n")
             all_outputs += self._read_until_prompt()
 
@@ -157,8 +149,6 @@ class ZTEOLT(BaseOLT):
             ports = []
             import re
             
-            # Regex que busca o padrão 1/1/1, 1/2/1, etc.
-            # Pode estar precedido de gpon-olt_ ou ser apenas o número no início da linha/espaço
             matches = re.findall(r"(?:gpon-olt_)?(\d+/\d+/\d+)", all_outputs)
             
             for m in matches:
@@ -166,7 +156,6 @@ class ZTEOLT(BaseOLT):
                 if port_id not in ports:
                     ports.append(port_id)
             
-            # Fallback final: show running-config (às vezes precisa de permissão de admin)
             if len(ports) <= 1:
                 print("Fallback: Poucas portas encontradas, tentando show running-config...")
                 self.tn.write(b"show running-config | include gpon-olt_\n")

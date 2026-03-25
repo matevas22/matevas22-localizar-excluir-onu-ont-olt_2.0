@@ -1,4 +1,4 @@
-from .database import db
+from database import db
 from datetime import datetime
 
 class User(db.Model):
@@ -103,5 +103,17 @@ class SignalHistory(db.Model):
             'rx_power': self.rx_power,
             'tx_power': self.tx_power,
             'timestamp': self.timestamp.isoformat()
+        }
+
+class OLTMonitorData(db.Model):
+    __tablename__ = 'olt_monitor_data'
+    id = db.Column(db.Integer, primary_key=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    data = db.Column(db.JSON, nullable=False) # Guardará todo o JSON de scan das OLTs
+
+    def to_dict(self):
+        return {
+            'updated_at': self.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+            'data': self.data
         }
 

@@ -2,8 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from sqlalchemy import func
 import bcrypt
-from ..database import db
-from ..models import User, Log
+from database import db
+from models import User, Log
 
 auth_bp = Blueprint('auth', __name__)
 

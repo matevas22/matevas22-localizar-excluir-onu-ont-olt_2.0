@@ -1,9 +1,28 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from ..models import db, OLT, StatusDescription, SystemConfig
+from models import db, OLT, StatusDescription, SystemConfig, OLTMonitorData
+import os
+import json
 import re
 
 olt_bp = Blueprint('olts', __name__)
+
+@olt_bp.route('/monitor-status', methods=['GET'])
+@jwt_required()
+def get_monitor_status():
+    """Retorna o status atual das OLTs capturado pelo monitor em background do DB."""
+    try:
+        latest = OLTMonitorData.query.order_by(OLTMonitorData.id.desc()).first()
+        if latest:
+            return jsonify({
+                "id": latest.id,
+                "data": latest.data,
+                "updated_at": latest.updated_at.isoformat() if latest.updated_at else None
+            }), 200
+        else:
+            return jsonify({"status": "waiting", "message": "First scan in progress. Please wait 2-3 minutes."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @olt_bp.route('/config', methods=['GET'])
 @jwt_required()

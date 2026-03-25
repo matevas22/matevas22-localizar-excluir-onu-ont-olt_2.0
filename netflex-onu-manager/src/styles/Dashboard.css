@@ -50,6 +50,44 @@
   gap: 1rem;
 }
 
+.monitor-highlight {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.05);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+}
+
+.monitor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.olt-summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.olt-mini-badge {
+  background: #1a1a1a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  font-size: 0.75rem;
+}
+
+.olt-ip {
+  color: #a1a1aa;
+  margin-right: 4px;
+}
+
+.olt-count {
+  color: #10b981;
+  font-weight: 600;
+}
+
 .stat-icon {
   padding: 0.75rem;
   border-radius: 0.75rem;

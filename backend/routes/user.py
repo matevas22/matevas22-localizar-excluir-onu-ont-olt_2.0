@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import or_
-from ..database import db
-from ..models import Log, User
+from database import db
+from models import Log, User
 
 user_bp = Blueprint('user', __name__)
 

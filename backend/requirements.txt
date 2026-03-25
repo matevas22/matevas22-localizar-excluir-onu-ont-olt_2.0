@@ -5,3 +5,8 @@ flask-sqlalchemy
 bcrypt
 python-dotenv
 Flask-Migrate
+flask-socketio
+eventlet
+python-socketio
+python-engineio
+netmiko

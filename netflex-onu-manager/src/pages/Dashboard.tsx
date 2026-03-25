@@ -9,6 +9,9 @@ import {
   History,
   Loader2,
   Search,
+  Wifi,
+  WifiOff,
+  Clock,
 } from "lucide-react";
 import {
   BarChart,
@@ -29,6 +32,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState<any[]>([]);
   const [recentLogs, setRecentLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [oltMonitor, setOltMonitor] = useState<any>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +50,20 @@ const Dashboard = () => {
       }
     };
     fetchData();
+
+    // Polling de 30 segundos para o status das OLTs
+    const fetchMonitor = async () => {
+      try {
+        const res = await api.get("/olts/monitor-status");
+        setOltMonitor(res.data);
+      } catch (err) {
+        console.error("Erro ao carregar monitor:", err);
+      }
+    };
+
+    fetchMonitor();
+    const interval = setInterval(fetchMonitor, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const COLORS = [
@@ -140,6 +158,32 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Real-time OLT Monitor Summary */}
+        {oltMonitor && (
+          <div className="stat-card monitor-highlight">
+            <div className="stat-content">
+              <div className="stat-icon emerald">
+                <Clock size={24} />
+              </div>
+              <div className="monitor-info">
+                <p className="stat-label">
+                  Monitor OLT ({oltMonitor.updated_at})
+                </p>
+                <div className="olt-summary-grid">
+                  {Object.entries(oltMonitor.data).map(([ip, ports]: any) => (
+                    <div key={ip} className="olt-mini-badge">
+                      <span className="olt-ip">{ip}:</span>
+                      <span className="olt-count">
+                        {ports.length} portas ativas
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="stat-card">
           <div className="stat-content">
@@ -322,7 +366,11 @@ const Dashboard = () => {
                       verticalAlign="bottom"
                       height={80}
                       iconType="circle"
-                      wrapperStyle={{ paddingTop: "20px", fontSize: "12px", width: "100%" }}
+                      wrapperStyle={{
+                        paddingTop: "20px",
+                        fontSize: "12px",
+                        width: "100%",
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

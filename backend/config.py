@@ -6,6 +6,11 @@ class Config:
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'sua_chave_jwt_super_segura_e_longa_o_suficiente_para_evitar_avisos'
     SQLALCHEMY_DATABASE_URI = 'sqlite:////app/database/usuarios.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 60,
+    }
     JWT_TOKEN_LOCATION = ['headers']
     JWT_HEADER_NAME = 'Authorization'
     JWT_HEADER_TYPE = 'Bearer'

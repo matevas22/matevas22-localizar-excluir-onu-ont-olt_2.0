@@ -1,9 +1,9 @@
 ﻿from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..utils.telnet import search_onu_on_olt, send_command
-from ..utils.drivers import get_olt_driver
-from ..models import StatusDescription, OLT, SystemConfig, Log, User, SignalHistory
-from ..database import db
+from utils.telnet import search_onu_on_olt, send_command
+from utils.drivers import get_olt_driver
+from models import StatusDescription, OLT, SystemConfig, Log, User, SignalHistory
+from database import db
 import concurrent.futures
 import re
 
@@ -47,7 +47,6 @@ def onu_checkup():
 def get_signal_history(sn):
     from datetime import datetime, timedelta
     
-    # Filtro de 3 meses atras para evitar retorno de dados muito antigos
     three_months_ago = datetime.utcnow() - timedelta(days=90)
     
     history = SignalHistory.query.filter(

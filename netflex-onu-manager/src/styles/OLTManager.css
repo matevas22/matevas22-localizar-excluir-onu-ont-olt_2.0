@@ -1,3 +1,75 @@
+.olt-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.monitor-badge-realtime {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  color: #10b981;
+}
+
+.pulse-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  position: absolute;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.wifi-icon {
+  z-index: 1;
+  margin-left: 2px;
+}
+
+.badge-text-content {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.badge-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-time {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
 .olt-manager-container {
   display: flex;
   flex-direction: column;
@@ -374,7 +446,7 @@
 
 .olt-manager-container {
   padding: 1.5rem;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -410,8 +482,8 @@
 
 .olt-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
 }
 
 .olt-card {
@@ -440,8 +512,16 @@
   border-radius: 10px;
 }
 
-.olt-card-info h3 { margin: 0; font-size: 1.1rem; color: #fff; }
-.olt-card-info p { margin: 0; font-size: 0.875rem; color: #a1a1aa; }
+.olt-card-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+.olt-card-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #a1a1aa;
+}
 
 .olt-type-badge {
   font-size: 0.7rem;
@@ -453,7 +533,14 @@
   font-weight: 600;
 }
 
-.card-arrow { margin-left: auto; color: #52525b; }
+.app-container {
+  max-width: 100% !important;
+}
+
+.card-arrow {
+  margin-left: auto;
+  color: #52525b;
+}
 
 .olt-details-view {
   background: #18181b;
@@ -477,7 +564,10 @@
   transition: all 0.2s;
 }
 
-.back-button:hover { background: #27272a; color: #fff; }
+.back-button:hover {
+  background: #27272a;
+  color: #fff;
+}
 
 .details-layout {
   display: grid;
@@ -509,20 +599,56 @@
 
 .port-item {
   text-align: left;
-  padding: 0.6rem 0.75rem;
+  padding: 0.8rem 1rem;
   border: none;
   background: transparent;
   border-radius: 6px;
   color: #a1a1aa;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
 }
 
-.port-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-.port-item.active { background: #6366f1; color: white; font-weight: 500; }
+.port-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+.port-item.active {
+  background: #6366f1;
+  color: white;
+  font-weight: 500;
+}
 
-.onus-container { padding: 1.5rem; background: #18181b; }
+.port-item-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.port-name {
+  font-weight: 600;
+}
+
+.onu-count-badge {
+  font-size: 0.7rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  opacity: 0.8;
+}
+
+.active .onu-count-badge {
+  background: rgba(255, 255, 255, 0.2);
+  opacity: 1;
+}
+
+.onus-container {
+  padding: 1.5rem;
+  background: #18181b;
+}
 
 .empty-state {
   display: flex;
@@ -581,8 +707,14 @@
   font-weight: 500;
 }
 
-.status-pill.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.status-pill.danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.status-pill.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.status-pill.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
 
 .phase-cell {
   display: flex;
@@ -596,7 +728,11 @@
   border-radius: 50%;
 }
 
-.no-data { text-align: center; color: #52525b; padding: 2rem; }
+.no-data {
+  text-align: center;
+  color: #52525b;
+  padding: 2rem;
+}
 
 .onus-footer {
   margin-top: 1rem;
@@ -606,6 +742,11 @@
 }
 
 @media (max-width: 768px) {
-  .details-layout { grid-template-columns: 1fr; }
-  .ports-sidebar { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+  .details-layout {
+    grid-template-columns: 1fr;
+  }
+  .ports-sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
 }

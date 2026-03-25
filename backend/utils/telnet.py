@@ -1,6 +1,6 @@
 import telnetlib
 import time
-from ..models import OLT, SystemConfig
+from models import OLT, SystemConfig
 
 def get_credentials(host_ip):
     try:

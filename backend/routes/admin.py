@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
-from ..database import db
-from ..models import User, Log
+from database import db
+from models import User, Log
 import bcrypt
 
 admin_bp = Blueprint('admin', __name__)
