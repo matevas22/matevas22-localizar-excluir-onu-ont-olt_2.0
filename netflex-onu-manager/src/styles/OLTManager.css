@@ -543,7 +543,7 @@
 
 .olt-details-view {
   background: #18181b;
-  border-radius: 16px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -598,6 +598,52 @@
   border-radius: 12px;
 }
 
+.sidebar-title {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  font-weight: 600;
+  color: #71717a;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-filter input {
+  width: 100%;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 0.6rem 0.6rem 2.2rem;
+  color: #fff;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.sidebar-filter input:focus {
+  border-color: #6366f1;
+  background: #111113;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.sidebar-filter .filter-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: #52525b;
+}
+
 .ports-column {
   display: flex !important;
   flex-direction: column !important;
@@ -629,7 +675,7 @@
 .onus-content {
   display: flex;
   flex-direction: column;
-  height: 80%;
+  height: 70%;
   width: 100%;
 }
 
@@ -696,22 +742,75 @@
 }
 
 .onus-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 7px !important;
+  margin-top: 7px;
+  gap: 24rem !important;
+}
+
+.onus-header-filters {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
+  gap: 5px;
+  flex: 1;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 300px;
+  width: 100%;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 10px;
+  color: #52525b;
+}
+
+.search-box input {
+  width: 100%;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  color: #fff;
+  outline: none;
+}
+
+.search-box input:focus {
+  border-color: #6366f1;
+}
+
+.status-select {
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  color: #fff;
+  outline: none;
+  cursor: pointer;
+}
+
+.status-select:focus {
+  border-color: #6366f1;
 }
 
 .onus-header h2 {
   color: #fff;
   font-size: 1.25rem;
   margin: 0;
+  white-space: nowrap;
 }
 
 .onus-table-wrapper {
   overflow-x: auto;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
+  flex: 1;
 }
 
 .onus-table {
@@ -771,6 +870,7 @@
 
 .onus-footer {
   margin-top: 1rem;
+  margin-right: 11px;
   text-align: right;
   font-size: 0.875rem;
   color: #71717a;

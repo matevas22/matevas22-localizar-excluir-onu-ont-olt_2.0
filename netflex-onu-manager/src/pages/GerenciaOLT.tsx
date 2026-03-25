@@ -11,6 +11,8 @@ import {
   Info,
   Wifi,
   Clock,
+  Search,
+  Filter,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
@@ -28,6 +30,11 @@ const GerenciaOLT = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOlt, setSelectedOlt] = useState<any | null>(null);
   const [selectedPort, setSelectedPort] = useState<string | null>(null);
+
+  // Estados para Filtros
+  const [portSearch, setPortSearch] = useState("");
+  const [onuSearch, setOnuSearch] = useState("");
+  const [onuStatusFilter, setOnuStatusFilter] = useState("all");
 
   // Estados para Monitoramento
   const [monitorData, setMonitorData] = useState<any>(null);
@@ -73,10 +80,15 @@ const GerenciaOLT = () => {
   const handleSelectOlt = (olt: any) => {
     setSelectedOlt(olt);
     setSelectedPort(null);
+    setPortSearch("");
+    setOnuSearch("");
+    setOnuStatusFilter("all");
   };
 
   const handleSelectPort = (port: string) => {
     setSelectedPort(port);
+    setOnuSearch("");
+    setOnuStatusFilter("all");
   };
 
   const getPhaseColor = (state: string) => {
@@ -97,11 +109,32 @@ const GerenciaOLT = () => {
   // Pega as portas da OLT selecionada do monitorData (pelo IP)
   const currentOltPorts = monitorData?.data?.[selectedOlt?.ip] || [];
 
+  // Filtrar Portas
+  const filteredPorts = currentOltPorts.filter((p: any) =>
+    p.port.toLowerCase().includes(portSearch.toLowerCase()),
+  );
+
   // Pega as ONUs da porta selecionada
   const currentPortData = currentOltPorts.find(
     (p: any) => p.port === selectedPort,
   );
   const currentOnus = currentPortData?.onus || [];
+
+  // Filtrar ONUs
+  const filteredOnus = currentOnus.filter((onu: any) => {
+    const matchesSearch =
+      onu.onu_id.toLowerCase().includes(onuSearch.toLowerCase()) ||
+      onu.omcc_state.toLowerCase().includes(onuSearch.toLowerCase());
+
+    const matchesStatus =
+      onuStatusFilter === "all" ||
+      (onuStatusFilter === "working" &&
+        onu.phase_state.toLowerCase() === "working") ||
+      (onuStatusFilter === "offline" &&
+        ["offline", "los"].includes(onu.phase_state.toLowerCase()));
+
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) {
     return (
@@ -190,7 +223,18 @@ const GerenciaOLT = () => {
               <div className="details-layout">
                 <aside className="ports-sidebar">
                   <div className="sidebar-title">
-                    <Layers size={18} /> Portas da OLT
+                    <div className="title-row">
+                      <Layers size={18} /> Portas da OLT
+                    </div>
+                    <div className="sidebar-filter">
+                      <Search size={14} className="filter-icon" />
+                      <input
+                        type="text"
+                        placeholder="Filtrar porta..."
+                        value={portSearch}
+                        onChange={(e) => setPortSearch(e.target.value)}
+                      />
+                    </div>
                   </div>
                   {currentOltPorts.length === 0 ? (
                     <div className="loading-inline">
@@ -200,7 +244,7 @@ const GerenciaOLT = () => {
                   ) : (
                     <div className="ports-column">
                       <div className="ports-list">
-                        {currentOltPorts.map((p: any) => (
+                        {filteredPorts.map((p: any) => (
                           <button
                             key={p.port}
                             className={`port-item ${selectedPort === p.port ? "active" : ""}`}
@@ -228,8 +272,29 @@ const GerenciaOLT = () => {
                   ) : (
                     <div className="onus-content">
                       <div className="onus-header">
-                        <h2>Porta: {selectedPort}</h2>
-                        {/* Status sync via monitorData */}
+                        <div className="onus-header-title">
+                          <h2>Porta: {selectedPort}</h2>
+                        </div>
+                        <div className="onus-header-filters">
+                          <div className="search-box">
+                            <Search size={16} />
+                            <input
+                              type="text"
+                              placeholder="Filtrar ID ou OMCC..."
+                              value={onuSearch}
+                              onChange={(e) => setOnuSearch(e.target.value)}
+                            />
+                          </div>
+                          <select
+                            className="status-select"
+                            value={onuStatusFilter}
+                            onChange={(e) => setOnuStatusFilter(e.target.value)}
+                          >
+                            <option value="all">Todos Status</option>
+                            <option value="working">Online (working)</option>
+                            <option value="offline">Offline/LOS</option>
+                          </select>
+                        </div>
                       </div>
 
                       <div className="onus-table-wrapper">
@@ -244,14 +309,16 @@ const GerenciaOLT = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {currentOnus.length === 0 ? (
+                            {filteredOnus.length === 0 ? (
                               <tr>
                                 <td colSpan={5} className="no-data">
-                                  Nenhuma ONU encontrada nesta porta
+                                  {currentOnus.length === 0
+                                    ? "Nenhuma ONU encontrada nesta porta"
+                                    : "Nenhum resultado para o filtro"}
                                 </td>
                               </tr>
                             ) : (
-                              currentOnus.map((onu: any, i: number) => (
+                              filteredOnus.map((onu: any, i: number) => (
                                 <tr key={i}>
                                   <td>
                                     <strong>{onu.onu_id}</strong>
