@@ -49,6 +49,14 @@ class BaseOLT(ABC):
     def get_onu_details(self, sn):
         pass
 
+    @abstractmethod
+    def get_ports(self):
+        pass
+
+    @abstractmethod
+    def get_onus_on_port(self, port):
+        pass
+
     def disconnect(self):
         if self.tn:
             self.tn.write(b"exit\n")
@@ -72,7 +80,6 @@ class HuaweiOLT(BaseOLT):
         self.tn.read_until(b"#", timeout=5)
 
     def _read_until_prompt(self):
-        # Huawei prompt usually ends with # or (config)#
         _, match, data = self.tn.expect([b"#"], timeout=10)
         return data.decode('ascii', errors='ignore')
 
@@ -83,6 +90,14 @@ class HuaweiOLT(BaseOLT):
     def get_onu_details(self, sn):
         # Implementação específica para Huawei
         pass
+
+    def get_ports(self):
+        # Implementação específica para Huawei
+        return []
+
+    def get_onus_on_port(self, port):
+        # Implementação específica para Huawei
+        return []
 
 class ZTEOLT(BaseOLT):
     def _login(self):
@@ -117,10 +132,76 @@ class ZTEOLT(BaseOLT):
             "tx_power": 2.1
         }
 
+    def get_ports(self):
+        if not self.tn: return []
+        try:
+            self.tn.write(b"\n")
+            self._read_until_prompt()
+
+            self.tn.write(b"show gpon olt-port summary\n")
+            
+            output = self._read_until_prompt()
+            print(f"DEBUG OLT Output:\n{output}\n--- END ---")
+            
+            ports = []
+            import re
+            
+            matches = re.findall(r"(?:gpon-olt_)?(\d+/\d+/\d+)", output)
+            
+            for m in matches:
+                port_id = f"gpon-olt_{m}"
+                if port_id not in ports:
+                    ports.append(port_id)
+            
+            if not ports:
+                print("Fallback: show running-config")
+                self.tn.write(b"show running-config | include gpon-olt_\n")
+                output_cfg = self._read_until_prompt()
+                matches_cfg = re.findall(r"gpon-olt_(\d+/\d+/\d+)", output_cfg)
+                for m in matches_cfg:
+                    port_id = f"gpon-olt_{m}"
+                    if port_id not in ports:
+                        ports.append(port_id)
+
+            return sorted(list(set(ports)))
+        except Exception as e:
+            print(f"Error in get_ports: {e}")
+            return []
+
+    def get_onus_on_port(self, port):
+        if not self.tn: return []
+        try:
+            port_num = port.split('_')[-1] if '_' in port else port
+            
+            cmd = f"show gpon onu state gpon-olt_{port_num}\n"
+            self.tn.write(cmd.encode('ascii'))
+            
+            output = self._read_until_prompt()
+            
+            onus = []
+            lines = output.split('\n')
+            for line in lines:
+                line = line.strip()
+                if not line or "OnuIndex" in line or "---" in line or "ONU Number" in line:
+                    continue
+                
+                parts = line.split()
+                if len(parts) >= 4:
+                    onus.append({
+                        "index": parts[0],
+                        "admin_state": parts[1],
+                        "omcc_state": parts[2],
+                        "phase_state": parts[3],
+                        "channel": parts[4] if len(parts) > 4 else ""
+                    })
+            return onus
+        except Exception as e:
+            print(f"Error getting onus on port: {e}")
+            return []
+
 def get_olt_driver(olt_obj):
     if olt_obj.type.upper() == "HUAWEI":
         return HuaweiOLT(olt_obj.ip, olt_obj.username, olt_obj.password)
     elif olt_obj.type.upper() == "ZTE":
         return ZTEOLT(olt_obj.ip, olt_obj.username, olt_obj.password)
-    # Default to ZTE or raise error
     return ZTEOLT(olt_obj.ip, olt_obj.username, olt_obj.password)

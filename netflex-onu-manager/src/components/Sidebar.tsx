@@ -8,6 +8,7 @@ import {
   User,
   Settings,
   Shield,
+  Monitor,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -50,6 +51,12 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
       path: "/olts",
       icon: Settings,
       label: "OLTs",
+      roles: ["admin"],
+    },
+    {
+      path: "/gerencia-olt",
+      icon: Monitor,
+      label: "Gerencia OLT",
       roles: ["admin"],
     },
     { path: "/profile", icon: User, label: "Perfil", roles: ["tech", "admin"] },
@@ -158,8 +165,8 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
       {/* Mobile Header */}
       <div className="mobile-header">
         {!isCollapsed && (
-            <img src={logo} alt="NETFLEX-" className="sidebar-logo" />
-          )}
+          <img src={logo} alt="NETFLEX-" className="sidebar-logo" />
+        )}
         <div className="mobile-avatar">{user.username[0].toUpperCase()}</div>
       </div>
     </>

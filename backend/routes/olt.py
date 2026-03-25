@@ -95,6 +95,68 @@ def update_status(id):
     db.session.commit()
     return jsonify(status.to_dict())
 
+@olt_bp.route('/<int:id>/ports', methods=['GET'])
+@jwt_required()
+def get_olt_ports(id):
+    olt = OLT.query.get(id)
+    if not olt:
+        return jsonify({"error": "OLT not found"}), 404
+        
+    from ..utils.drivers import get_olt_driver
+    from ..utils.telnet import get_credentials
+    
+    # Garantir que temos credenciais antes de tentar conectar
+    if not olt.username or not olt.password:
+        u, p = get_credentials(olt.ip)
+        olt.username = u
+        olt.password = p
+
+    if not olt.username or not olt.password:
+        return jsonify({"error": "No credentials found for this OLT"}), 400
+
+    driver = get_olt_driver(olt)
+    if not driver.connect():
+        return jsonify({"error": f"Failed to connect to OLT {olt.ip}. Check credentials and connectivity."}), 500
+        
+    try:
+        ports = driver.get_ports()
+        return jsonify(ports)
+    finally:
+        driver.disconnect()
+
+@olt_bp.route('/<int:id>/onus-on-port', methods=['GET'])
+@jwt_required()
+def get_onus_on_port(id):
+    olt = OLT.query.get(id)
+    if not olt:
+        return jsonify({"error": "OLT not found"}), 404
+        
+    port = request.args.get('port')
+    if not port:
+        return jsonify({"error": "Port required"}), 400
+        
+    from ..utils.drivers import get_olt_driver
+    from ..utils.telnet import get_credentials
+
+    # Garantir que temos credenciais
+    if not olt.username or not olt.password:
+        u, p = get_credentials(olt.ip)
+        olt.username = u
+        olt.password = p
+
+    if not olt.username or not olt.password:
+        return jsonify({"error": "No credentials found for this OLT"}), 400
+
+    driver = get_olt_driver(olt)
+    if not driver.connect():
+        return jsonify({"error": f"Failed to connect to OLT {olt.ip}"}), 500
+        
+    try:
+        onus = driver.get_onus_on_port(port)
+        return jsonify(onus)
+    finally:
+        driver.disconnect()
+
 @olt_bp.route('/status/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_status(id):

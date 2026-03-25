@@ -47,7 +47,7 @@ def onu_checkup():
 def get_signal_history(sn):
     from datetime import datetime, timedelta
     
-    # Filtro de 3 meses atrÃ¡s
+    # Filtro de 3 meses atras para evitar retorno de dados muito antigos
     three_months_ago = datetime.utcnow() - timedelta(days=90)
     
     history = SignalHistory.query.filter(
@@ -392,7 +392,6 @@ def get_onu_signal(sn):
 
     desc, color = get_status_info(status)
 
-    # no histórico global
     try:
         olt_record = OLT.query.filter_by(ip=olt_ip).first()
         if olt_record:

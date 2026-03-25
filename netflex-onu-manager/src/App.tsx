@@ -12,12 +12,12 @@ import { Loader2 } from "lucide-react";
 import api from "./services/api";
 import { clearRecentSns } from "./utils/recentSns";
 
-
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import LocateOnu from "./pages/LocateOnu";
 import Diagnosis from "./pages/Diagnosis";
 import OLTManager from "./pages/OLTManager";
+import GerenciaOLT from "./pages/GerenciaOLT";
 import Profile from "./pages/Profile";
 import AdminPanel from "./pages/AdminPanel";
 
@@ -138,6 +138,26 @@ const AppContent = () => {
                 element={
                   user.role === "admin" ? (
                     <OLTManager />
+                  ) : (
+                    <Navigate to="/home" />
+                  )
+                }
+              />
+              <Route
+                path="/gerencia-olt"
+                element={
+                  user.role === "admin" ? (
+                    <GerenciaOLT />
+                  ) : (
+                    <Navigate to="/home" />
+                  )
+                }
+              />
+              <Route
+                path="/gerencia-olt"
+                element={
+                  user.role === "admin" ? (
+                    <GerenciaOLT />
                   ) : (
                     <Navigate to="/home" />
                   )
