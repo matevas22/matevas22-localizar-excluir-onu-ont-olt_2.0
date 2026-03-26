@@ -86,6 +86,7 @@ const Dashboard = () => {
     innerRadius,
     outerRadius,
     percent,
+    
   }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -158,33 +159,7 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Real-time OLT Monitor Summary */}
-        {oltMonitor && (
-          <div className="stat-card monitor-highlight">
-            <div className="stat-content">
-              <div className="stat-icon emerald">
-                <Clock size={24} />
-              </div>
-              <div className="monitor-info">
-                <p className="stat-label">
-                  Monitor OLT ({oltMonitor.updated_at})
-                </p>
-                <div className="olt-summary-grid">
-                  {Object.entries(oltMonitor.data).map(([ip, ports]: any) => (
-                    <div key={ip} className="olt-mini-badge">
-                      <span className="olt-ip">{ip}:</span>
-                      <span className="olt-count">
-                        {ports.length} portas ativas
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         <div className="stat-card">
           <div className="stat-content">
             <div className="stat-icon orange">

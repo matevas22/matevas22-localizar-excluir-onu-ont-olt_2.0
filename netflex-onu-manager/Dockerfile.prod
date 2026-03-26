@@ -8,6 +8,7 @@ RUN npm install
 
 COPY netflex-onu-manager/ .
 RUN npm run build
+RUN ls
 
 FROM nginx:alpine
 

@@ -19,7 +19,6 @@ import { toast } from "react-toastify";
 import api from "../services/api";
 import "../styles/OLTManager.css";
 
-// Configuração do SocketIO
 const socket = io("http://localhost:5000", {
   transports: ["websocket"],
   autoConnect: true,
@@ -31,17 +30,14 @@ const GerenciaOLT = () => {
   const [selectedOlt, setSelectedOlt] = useState<any | null>(null);
   const [selectedPort, setSelectedPort] = useState<string | null>(null);
 
-  // Estados para Filtros
   const [portSearch, setPortSearch] = useState("");
   const [onuSearch, setOnuSearch] = useState("");
 
-  // Estados para Monitoramento
   const [monitorData, setMonitorData] = useState<any>(null);
 
   useEffect(() => {
     fetchOlts();
 
-    // Ouvir atualizações em tempo real via WebSocket
     socket.on("olt_update", (data) => {
       console.log("Recebido via WebSocket:", data);
       setMonitorData(data);
@@ -51,7 +47,6 @@ const GerenciaOLT = () => {
       });
     });
 
-    // Buscar dados iniciais se existirem
     api
       .get("/olts/monitor-status")
       .then((res) => {
@@ -103,21 +98,17 @@ const GerenciaOLT = () => {
     }
   };
 
-  // Pega as portas da OLT selecionada do monitorData (pelo IP)
   const currentOltPorts = monitorData?.data?.[selectedOlt?.ip] || [];
 
-  // Filtrar Portas
   const filteredPorts = currentOltPorts.filter((p: any) =>
     p.port.toLowerCase().includes(portSearch.toLowerCase()),
   );
 
-  // Pega as ONUs da porta selecionada
   const currentPortData = currentOltPorts.find(
     (p: any) => p.port === selectedPort,
   );
   const currentOnus = currentPortData?.onus || [];
 
-  // Filtrar ONUs
   const filteredOnus = currentOnus.filter((onu: any) => {
     const searchLower = onuSearch.toLowerCase();
     const matchesSearch =
@@ -130,21 +121,16 @@ const GerenciaOLT = () => {
     return matchesSearch;
   });
 
-  // Contadores para o rodapé baseados nos itens filtrados (ou todos da porta)
   const stats = (filteredOnus.length > 0 ? filteredOnus : currentOnus).reduce(
     (acc: any, onu: any) => {
       const pmState = (onu.p_state || onu.phase_state || "").toLowerCase();
       const omState = (onu.omcc_state || "").toLowerCase();
 
-      // Regras estritas:
-      // Online: phase_state deve ser working OU omcc_state deve ser working
       const isOnline =
         pmState.includes("working") || omState.includes("working");
 
-      // Dying: phase_state ou omcc_state deve conter dyinggasp
       const isDying = pmState.includes("dying") || omState.includes("dying");
 
-      // Offline: se não for nenhum dos acima e contiver 'off' ou 'los'
       const isOffline =
         !isOnline &&
         !isDying &&
@@ -173,36 +159,6 @@ const GerenciaOLT = () => {
 
   return (
     <div className="olt-manager-container">
-      <header className="olt-manager-header">
-        <div className="header-content">
-          <Server className="header-icon" />
-          <div>
-            <h1>Gerência OLT</h1>
-            <p>Gerencie portas e ONUs em tempo real</p>
-          </div>
-        </div>
-
-        {/* Real-time Indicator Badge */}
-        {monitorData && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="monitor-badge-realtime"
-          >
-            <div className="pulse-container">
-              <div className="pulse-dot"></div>
-              <Wifi size={14} className="wifi-icon" />
-            </div>
-            <div className="badge-text-content">
-              <span className="badge-label">Live Monitor</span>
-              <span className="badge-time">
-                Refreshed: {monitorData.updated_at.split(" ")[1]}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </header>
-
       <div className="olt-manager-content">
         <AnimatePresence mode="wait">
           {!selectedOlt ? (
@@ -301,6 +257,28 @@ const GerenciaOLT = () => {
                         <div className="onus-header-title">
                           <h2>Porta: {selectedPort}</h2>
                         </div>
+                        <header className="olt-manager-header">
+                          {currentOnus.length > 0 && (
+                            <div className="onus-footer">
+                              <div className="onus-footer-stats">
+                                <span className="stat-item online">
+                                  <b>{stats.online}</b> Online
+                                </span>
+                                <span className="stat-item offline">
+                                  <b>{stats.offline}</b> Offline/LOS
+                                </span>
+                                <span className="stat-item dying">
+                                  <b>{stats.dying}</b> DyingGasp
+                                </span>
+                                <span className="stat-item total">
+                                  Total: <b>{currentOnus.length}</b>
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Real-time Indicator Badge */}
+                        </header>
                         <div className="onus-header-filters">
                           <div className="search-box">
                             <Search size={16} />
@@ -368,25 +346,6 @@ const GerenciaOLT = () => {
                           </tbody>
                         </table>
                       </div>
-
-                      {currentOnus.length > 0 && (
-                        <div className="onus-footer">
-                          <div className="onus-footer-stats">
-                            <span className="stat-item online">
-                              <b>{stats.online}</b> Online
-                            </span>
-                            <span className="stat-item offline">
-                              <b>{stats.offline}</b> Offline/LOS
-                            </span>
-                            <span className="stat-item dying">
-                              <b>{stats.dying}</b> DyingGasp
-                            </span>
-                            <span className="stat-item total">
-                              Total: <b>{currentOnus.length}</b>
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </main>
