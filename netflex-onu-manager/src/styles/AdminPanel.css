@@ -106,7 +106,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 500px;
+  height: 741px;
 }
 
 @media (min-width: 1280px) {
@@ -258,7 +258,7 @@
 }
 
 .table-body td {
-  padding: 1rem 1.5rem;
+  padding: 4px 20px;
 }
 
 .table-body td.text-right {
