@@ -13,6 +13,7 @@ import {
   Clock,
   Search,
   Filter,
+  RefreshCw,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
@@ -32,6 +33,7 @@ const GerenciaOLT = () => {
 
   const [portSearch, setPortSearch] = useState("");
   const [onuSearch, setOnuSearch] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [monitorData, setMonitorData] = useState<any>(null);
 
@@ -41,10 +43,6 @@ const GerenciaOLT = () => {
     socket.on("olt_update", (data) => {
       console.log("Recebido via WebSocket:", data);
       setMonitorData(data);
-      toast.info("Status das OLTs atualizado em tempo real", {
-        position: "bottom-right",
-        autoClose: 2000,
-      });
     });
 
     api
@@ -58,6 +56,38 @@ const GerenciaOLT = () => {
       socket.off("olt_update");
     };
   }, []);
+
+  const handleManualRefresh = async () => {
+    if (!selectedOlt || !selectedPort || isRefreshing) return;
+
+    setIsRefreshing(true);
+    const toastId = toast.loading(`Sincronizando porta ${selectedPort}...`, {
+      position: "top-center",
+    });
+
+    try {
+      await api.post("/olts/refresh-port", {
+        olt_ip: selectedOlt.ip,
+        port: selectedPort,
+      });
+
+      toast.update(toastId, {
+        render: `Porta ${selectedPort} atualizada com sucesso!`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } catch (err: any) {
+      toast.update(toastId, {
+        render: "Erro ao atualizar porta em tempo real",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const fetchOlts = async () => {
     setLoading(true);
@@ -256,6 +286,20 @@ const GerenciaOLT = () => {
                       <div className="onus-header">
                         <div className="onus-header-title">
                           <h2>Porta: {selectedPort}</h2>
+                          <button
+                            className={`refresh-port-btn ${isRefreshing ? "loading" : ""}`}
+                            onClick={handleManualRefresh}
+                            disabled={isRefreshing}
+                            title="Atualizar porta em tempo real"
+                          >
+                            <RefreshCw
+                              size={14}
+                              className={isRefreshing ? "animate-spin" : ""}
+                            />
+                            <span>
+                              {isRefreshing ? "Sincronizando..." : "Atualizar"}
+                            </span>
+                          </button>
                         </div>
                         <header className="olt-manager-header">
                           {currentOnus.length > 0 && (

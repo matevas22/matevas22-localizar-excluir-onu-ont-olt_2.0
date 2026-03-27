@@ -81,11 +81,9 @@ const OLTManager = () => {
       actions,
     };
 
-    // If creating, password can be null (universal)
     if (!isEditing && password === "") delete (payload as any).password;
 
     if (isEditing && password === "") {
-      // To not change password, do not include it in payload
       delete (payload as any).password;
     }
 

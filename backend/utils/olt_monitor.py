@@ -22,7 +22,6 @@ def parse_onu_state(output: str):
         line = line.strip()
         if not line: continue
         
-        # 1/1/1:1 working enable enable up
         match_5 = re.search(r'(\d+/\d+/\d+:\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)', line)
         if match_5:
             onu_id, phase, admin, omcc, channel = match_5.groups()
@@ -35,7 +34,6 @@ def parse_onu_state(output: str):
             })
             continue
 
-        # 1/1/1:1 working enable enable (4 colunas)
         match_4 = re.search(r'(\d+/\d+/\d+:\d+)\s+(\S+)\s+(\S+)\s+(\S+)', line)
         if match_4:
             onu_id, phase, admin, omcc = match_4.groups()
@@ -48,7 +46,6 @@ def parse_onu_state(output: str):
             })
             continue
     
-    # Capturar total (ex: ONU Number: 10/12 ou Total ONU: 20)
     onu_num_match = re.search(r'(?:ONU Number|Total ONU):\s*(\d+)/?(\d+)?', output, re.IGNORECASE)
     
     t_found = len(onus)
@@ -63,7 +60,6 @@ def parse_onu_state(output: str):
 def check_port(device, port: str, prompt_pattern: str):
     cmd = f"show gpon onu state gpon-olt_{port}"
     try:
-        # Usa o padrão dinâmico ativo (que inclui o prompt real detectado)
         output = device.send_command(cmd, expect_string=prompt_pattern, read_timeout=45)
         if ":" in output or "ONU Number" in output:
             data = parse_onu_state(output)
@@ -85,31 +81,34 @@ def scan_single_olt(olt_id, univ_user, univ_pass, app, all_results):
 
         print(f"[MONITOR] Iniciando Scan OLT {olt.name} ({olt.ip})...", flush=True)
         device_params = {
-            'device_type': 'zte_zxros',
+            'device_type': 'zte_zxros_telnet',
             'host': olt.ip,
             'username': user,
             'password': pwd,
-            'global_delay_factor': 1.0, # Aumentado para maior estabilidade em OLTs lentas
-            'conn_timeout': 30,
+            'global_delay_factor': 2.0, # Aumentado significativamente para estabilidade em OLTs lentas
+            'conn_timeout': 60, # Dobrado o tempo de espera inicial
             'fast_cli': False,
-            # 'session_log': f'debug_{olt.ip}.txt', # para ativas o debug detalhado por OLT
+            'read_timeout_override': 120, # Força timeout longo em todas as operações
         }
 
         try:
             olt_results = []
             with ConnectHandler(**device_params) as device:
-                device.write_channel('\n')
-                time.sleep(1)
-                device.enable() 
+                # Força o modo enable manualmente se find_prompt() falhar
+                try:
+                    device.write_channel('\n')
+                    time.sleep(2)
+                    device.enable() 
+                except:
+                    pass
                 
-                real_prompt = device.find_prompt()
-                print(f"[DEBUG] Prompt detectado para {olt.ip}: {real_prompt}", flush=True)
+                # Regex mais abrangente para capturar prompts com caracteres estranhos ou escapes
+                active_pattern = r'[>#\\]' 
                 
-                active_pattern = f"({re.escape(real_prompt)}|[>#])"
+                device.send_command('terminal length 0', expect_string=active_pattern, read_timeout=60)
                 
-                device.send_command('terminal length 0', expect_string=active_pattern)
-                
-                sh_onu = device.send_command('show gpon onu state', expect_string=active_pattern, read_timeout=90)
+                # Comando principal com timeout estendido para 300s (5 minutos) para a PJ14
+                sh_onu = device.send_command('show gpon onu state', expect_string=active_pattern, read_timeout=300)
                 
                 found_ports = re.findall(r'(?:gpon-olt_)?(\d+/\d+/\d+)', sh_onu)
                 unique_ports = sorted(list(set(found_ports))) or []

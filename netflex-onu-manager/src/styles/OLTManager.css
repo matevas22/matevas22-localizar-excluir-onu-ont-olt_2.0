@@ -799,6 +799,57 @@
   white-space: nowrap;
 }
 
+.onus-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.refresh-port-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.refresh-port-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+}
+
+.refresh-port-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.refresh-port-btn.loading {
+  background: rgba(255, 255, 255, 0.05);
+  color: #71717a;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .onus-table-wrapper {
   overflow-x: auto;
   border: 1px solid rgba(255, 255, 255, 0.05);

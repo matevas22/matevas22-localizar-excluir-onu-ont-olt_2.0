@@ -4,13 +4,22 @@ from models import db, OLT, StatusDescription, SystemConfig, OLTMonitorData
 import os
 import json
 import re
+from utils.telnet import get_credentials
+from netmiko import ConnectHandler
+from utils.olt_monitor import check_port, parse_onu_state
+import time
+from netmiko import ConnectHandler
+from utils.olt_monitor import check_port
+from sqlalchemy.orm.attributes import flag_modified
+from utils.drivers import get_olt_driver
+from utils.telnet import get_credentials
+import traceback
 
 olt_bp = Blueprint('olts', __name__)
 
 @olt_bp.route('/monitor-status', methods=['GET'])
 @jwt_required()
 def get_monitor_status():
-    """Retorna o status atual das OLTs capturado pelo monitor em background do DB."""
     try:
         latest = OLTMonitorData.query.order_by(OLTMonitorData.id.desc()).first()
         if latest:
@@ -99,6 +108,95 @@ def add_status():
     db.session.commit()
     return jsonify(new_status.to_dict()), 201
 
+
+
+@olt_bp.route('/refresh-port', methods=['POST'])
+@jwt_required()
+def refresh_port():
+    data = request.json
+    olt_ip = data.get('olt_ip')
+    port = data.get('port')
+
+    if not olt_ip or not port:
+        return jsonify({"error": "Missing OLT IP or Port"}), 400
+
+    olt = OLT.query.filter_by(ip=olt_ip).first()
+    if not olt:
+        return jsonify({"error": "OLT not found"}), 404
+
+    user, pwd = get_credentials(olt_ip)
+    
+    device_params = {
+        'device_type': 'zte_zxros_telnet',
+        'host': olt_ip,
+        'username': user,
+        'password': pwd,
+        'global_delay_factor': 0.5,
+        'conn_timeout': 30,
+        'fast_cli': False,
+    }
+
+    try:
+        with ConnectHandler(**device_params) as device:
+            device.write_channel('\n')
+            time.sleep(1)
+            try:
+                device.enable()
+            except:
+                pass
+
+            pattern = r'[>#]'
+            
+            device.send_command('terminal length 0', expect_string=pattern)
+            
+            port_data = check_port(device, port, pattern)
+            
+            if not port_data:
+                 return jsonify({"error": "Nenhuma ONU encontrada ou OLT não respondeu corretamente."}, 500)
+
+            monitor_entry = OLTMonitorData.query.first()
+            if monitor_entry:
+                try:
+                    current_cache = monitor_entry.data if monitor_entry.data else {}
+                    
+                    if olt_ip not in current_cache:
+                        current_cache[olt_ip] = []
+                     
+                    ports = current_cache[olt_ip]
+                    found = False
+                    for i, p in enumerate(ports):
+                        if p['port'] == port:
+                            ports[i] = port_data
+                            found = True
+                            break
+                    
+                    if not found:
+                        ports.append(port_data)
+                    
+             
+                 
+                    monitor_entry.data = current_cache
+                    flag_modified(monitor_entry, "data")
+                    db.session.commit()
+                    try:
+                        from app import socketio
+                        socketio.emit('olt_update', {
+                            'updated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+                            'data': current_cache
+                        })
+                    except Exception as ws_err:
+                        print(f"[WS ERROR] {ws_err}")
+
+                except Exception as db_err:
+                    db.session.rollback()
+                    print(f"[DB ERROR] {db_err}")
+                    return jsonify({"error": f"Erro ao atualizar banco de dados: {str(db_err)}"}), 500
+
+            return jsonify(port_data), 200
+    except Exception as e:
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
+
 @olt_bp.route('/status/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_status(id):
@@ -121,10 +219,8 @@ def get_olt_ports(id):
     if not olt:
         return jsonify({"error": "OLT not found"}), 404
         
-    from ..utils.drivers import get_olt_driver
-    from ..utils.telnet import get_credentials
+
     
-    # Garantir que temos credenciais antes de tentar conectar
     if not olt.username or not olt.password:
         u, p = get_credentials(olt.ip)
         olt.username = u
@@ -154,10 +250,7 @@ def get_onus_on_port(id):
     if not port:
         return jsonify({"error": "Port required"}), 400
         
-    from ..utils.drivers import get_olt_driver
-    from ..utils.telnet import get_credentials
 
-    # Garantir que temos credenciais
     if not olt.username or not olt.password:
         u, p = get_credentials(olt.ip)
         olt.username = u
