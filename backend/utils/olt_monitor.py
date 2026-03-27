@@ -60,16 +60,16 @@ def parse_onu_state(output: str):
     
     return {'onus': onus, 'total': f"{t_found}/{t_total}"}
 
-def check_port(device, port: str, prompt: str):
+def check_port(device, port: str, prompt_pattern: str):
     cmd = f"show gpon onu state gpon-olt_{port}"
     try:
-        # Reusar o prompt detectado para garantir que leu todo o output
-        output = device.send_command(cmd, expect_string=prompt, read_timeout=30)
+        # Usa o padrão dinâmico ativo (que inclui o prompt real detectado)
+        output = device.send_command(cmd, expect_string=prompt_pattern, read_timeout=45)
         if ":" in output or "ONU Number" in output:
             data = parse_onu_state(output)
             return {'port': port, 'onus': data['onus'], 'total': data['total']}
     except Exception as e:
-        print(f"[DEBUG] Erro ao ler porta {port}: {str(e)}", flush=True)
+        print(f"[DEBUG] Erro ao ler porta {port} na OLT {device.host}: {str(e)}", flush=True)
 
     return None
 
@@ -89,42 +89,40 @@ def scan_single_olt(olt_id, univ_user, univ_pass, app, all_results):
             'host': olt.ip,
             'username': user,
             'password': pwd,
-            'global_delay_factor': 0.5, # Reduzido para acelerar, mas compensado com read_timeout
+            'global_delay_factor': 1.0, # Aumentado para maior estabilidade em OLTs lentas
             'conn_timeout': 30,
             'fast_cli': False,
+            # 'session_log': f'debug_{olt.ip}.txt', # para ativas o debug detalhado por OLT
         }
 
         try:
             olt_results = []
             with ConnectHandler(**device_params) as device:
-                # O find_prompt() tenta detectar o prompt sozinho.
-                prompt = device.find_prompt()
-                print(f"[DEBUG] Prompt detectado para {olt.ip}: {prompt}", flush=True)
-                
-                # Pequena pausa para a OLT processar o login antes do primeiro comando
+                device.write_channel('\n')
                 time.sleep(1)
-
-                # Usamos o prompt dinâmico detectado como expect_string
-                device.send_command('terminal length 0', expect_string=prompt)
+                device.enable() 
                 
-                # Comando principal com timeout estendido para tabelas grandes
-                sh_onu = device.send_command('show gpon onu state', expect_string=prompt, read_timeout=40)
+                real_prompt = device.find_prompt()
+                print(f"[DEBUG] Prompt detectado para {olt.ip}: {real_prompt}", flush=True)
                 
-                # Regex flexível para capturar gpon-olt_1/1/1 ou apenas 1/1/1
+                active_pattern = f"({re.escape(real_prompt)}|[>#])"
+                
+                device.send_command('terminal length 0', expect_string=active_pattern)
+                
+                sh_onu = device.send_command('show gpon onu state', expect_string=active_pattern, read_timeout=90)
+                
                 found_ports = re.findall(r'(?:gpon-olt_)?(\d+/\d+/\d+)', sh_onu)
                 unique_ports = sorted(list(set(found_ports))) or []
                 print(f"[DEBUG] OLT {olt.ip} - Portas detectadas: {len(unique_ports)}", flush=True)
 
                 for port in unique_ports:
-                    res = check_port(device, port, prompt)
+                    res = check_port(device, port, active_pattern)
                     if res:
                         olt_results.append(res)
             
-            # Release connection immediately after disconnect
             db.session.remove()
             
             with threading.Lock():
-                # Estrutura esperada pelo Frontend: array de objetos { port, onus, total }
                 all_results[olt.ip] = sorted(olt_results, key=lambda x: x['port'])
             
             total_onus = sum(len(r['onus']) for r in olt_results)
