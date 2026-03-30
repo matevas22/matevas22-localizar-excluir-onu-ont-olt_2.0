@@ -147,43 +147,68 @@ def refresh_port():
 
             pattern = r'[>#]'
             
-            device.send_command('terminal length 0', expect_string=pattern)
+            # Limpa o buffer
+            device.read_channel()
+            device.write_channel('terminal length 0\n')
+            time.sleep(0.5)
+            device.read_channel()
             
-            port_data = check_port(device, port, pattern)
-            
-            if not port_data:
-                 return jsonify({"error": "Nenhuma ONU encontrada ou OLT não respondeu corretamente."}, 500)
+            # Forçar o comando direto para garantir sincronia real
+            # Limpar buffer exaustivamente antes de enviar
+            device.read_channel()
+            device.write_channel('\n')
+            time.sleep(0.5)
+            device.read_channel()
 
-            monitor_entry = OLTMonitorData.query.first()
+            cmd = f"show gpon onu state gpon-olt_{port}"
+            print(f"[DEBUG-REFRESH] Executando comando na OLT: {cmd}")
+            output = device.send_command(cmd, expect_string=pattern, read_timeout=30)
+            print(f"[DEBUG-REFRESH] Resposta bruta da OLT:\n{output}")
+            
+            from utils.olt_monitor import parse_onu_state
+            parsed = parse_onu_state(output)
+            
+            # Se o total for "0/2" ou similar, e a lista tiver ONUs, o parse_onu_state deve mandar isso
+            port_data = {
+                'port': port,
+                'onus': parsed['onus'],
+                'total': parsed['total']
+            }
+
+            # MONITOR_ENTRY - Buscar o registro MAIS RECENTE de scan da OLT
+            monitor_entry = OLTMonitorData.query.order_by(OLTMonitorData.id.desc()).first()
             if monitor_entry:
                 try:
-                    current_cache = monitor_entry.data if monitor_entry.data else {}
+                    import copy
+                    # Deep copy para garantir que não estamos mexendo em memória antiga
+                    current_cache = copy.deepcopy(monitor_entry.data) if monitor_entry.data else {}
                     
                     if olt_ip not in current_cache:
                         current_cache[olt_ip] = []
                      
-                    ports = current_cache[olt_ip]
-                    found = False
-                    for i, p in enumerate(ports):
-                        if p['port'] == port:
-                            ports[i] = port_data
-                            found = True
-                            break
+                    # Sincronização Destrutiva (Bruta): substitui a porta vinda diretamente da OLT
+                    # Filtramos TUDO que for da porta atual e injetamos só o que veio no 'output' agora
+                    clean_ports = [p for p in current_cache[olt_ip] if p['port'] != port]
+                    clean_ports.append(port_data)
+                    current_cache[olt_ip] = clean_ports
                     
-                    if not found:
-                        ports.append(port_data)
-                    
-             
-                 
+                    from sqlalchemy.orm.attributes import flag_modified
                     monitor_entry.data = current_cache
+                    monitor_entry.updated_at = db.func.now()
                     flag_modified(monitor_entry, "data")
                     db.session.commit()
+                    
+                    # Log para confirmar atualização
+                    print(f"[DEBUG-REFRESH] Banco atualizado para {olt_ip} porta {port}. Total agora: {len(parsed['onus'])} ONUs.")
+                    
                     try:
                         from app import socketio
+                        # Emitir para TODOS (incluindo quem enviou) para garantir que o front receba
                         socketio.emit('olt_update', {
                             'updated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
                             'data': current_cache
-                        })
+                        }, broadcast=True)
+                        print(f"[DEBUG-REFRESH] Socket enviado com sucesso.")
                     except Exception as ws_err:
                         print(f"[WS ERROR] {ws_err}")
 

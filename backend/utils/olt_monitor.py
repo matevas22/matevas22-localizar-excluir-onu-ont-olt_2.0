@@ -85,16 +85,15 @@ def scan_single_olt(olt_id, univ_user, univ_pass, app, all_results):
             'host': olt.ip,
             'username': user,
             'password': pwd,
-            'global_delay_factor': 2.0, # Aumentado significativamente para estabilidade em OLTs lentas
-            'conn_timeout': 60, # Dobrado o tempo de espera inicial
+            'global_delay_factor': 2.0,
+            'conn_timeout': 60, 
             'fast_cli': False,
-            'read_timeout_override': 120, # Força timeout longo em todas as operações
+            'read_timeout_override': 120,
         }
 
         try:
             olt_results = []
             with ConnectHandler(**device_params) as device:
-                # Força o modo enable manualmente se find_prompt() falhar
                 try:
                     device.write_channel('\n')
                     time.sleep(2)
@@ -102,12 +101,10 @@ def scan_single_olt(olt_id, univ_user, univ_pass, app, all_results):
                 except:
                     pass
                 
-                # Regex mais abrangente para capturar prompts com caracteres estranhos ou escapes
                 active_pattern = r'[>#\\]' 
                 
                 device.send_command('terminal length 0', expect_string=active_pattern, read_timeout=60)
                 
-                # Comando principal com timeout estendido para 300s (5 minutos) para a PJ14
                 sh_onu = device.send_command('show gpon onu state', expect_string=active_pattern, read_timeout=300)
                 
                 found_ports = re.findall(r'(?:gpon-olt_)?(\d+/\d+/\d+)', sh_onu)

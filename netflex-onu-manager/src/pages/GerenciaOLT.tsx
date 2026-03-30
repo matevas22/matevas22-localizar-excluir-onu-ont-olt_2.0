@@ -66,10 +66,27 @@ const GerenciaOLT = () => {
     });
 
     try {
-      await api.post("/olts/refresh-port", {
+      const res = await api.post("/olts/refresh-port", {
         olt_ip: selectedOlt.ip,
         port: selectedPort,
       });
+
+      // FORÇAR ATUALIZAÇÃO LOCAL IMEDIATA SEM ESPERAR O SOCKET
+      if (res.data) {
+        setMonitorData((prev: any) => {
+          const newData = { ...prev };
+          if (!newData.data) newData.data = {};
+          if (!newData.data[selectedOlt.ip]) newData.data[selectedOlt.ip] = [];
+          
+          // Remove a porta antiga e insere a nova leitura da OLT
+          newData.data[selectedOlt.ip] = [
+            ...newData.data[selectedOlt.ip].filter((p: any) => p.port !== selectedPort),
+            res.data
+          ];
+          
+          return newData;
+        });
+      }
 
       toast.update(toastId, {
         render: `Porta ${selectedPort} atualizada com sucesso!`,
