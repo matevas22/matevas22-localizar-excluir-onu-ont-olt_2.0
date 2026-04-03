@@ -177,3 +177,5 @@ def start_monitor(app, socketio_instance):
     thread = threading.Thread(target=monitor_olts_task, args=(app, socketio_instance), daemon=True)
     thread.start()
     print("[MONITOR] Thread disparada com sucesso.")
+
+    #teste

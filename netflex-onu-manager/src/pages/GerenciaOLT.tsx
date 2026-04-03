@@ -77,13 +77,15 @@ const GerenciaOLT = () => {
           const newData = { ...prev };
           if (!newData.data) newData.data = {};
           if (!newData.data[selectedOlt.ip]) newData.data[selectedOlt.ip] = [];
-          
+
           // Remove a porta antiga e insere a nova leitura da OLT
           newData.data[selectedOlt.ip] = [
-            ...newData.data[selectedOlt.ip].filter((p: any) => p.port !== selectedPort),
-            res.data
+            ...newData.data[selectedOlt.ip].filter(
+              (p: any) => p.port !== selectedPort,
+            ),
+            res.data,
           ];
-          
+
           return newData;
         });
       }
