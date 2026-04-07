@@ -20,6 +20,108 @@ def get_credentials(host_ip):
     except Exception:
         return "admin", "admin" 
 
+def send_command_with_confirmation(host, commands, username=None, password=None):
+    """Send commands that may require interactive confirmations (like reboot).
+    
+    For commands 'reboot' or 'restore' that ask "Confirm to reboot? [yes/no]:", 
+    this function will automatically respond with 'yes'.
+    """
+    if not username or not password:
+        try:
+            u, p = get_credentials(host)
+            if not username: username = u
+            if not password: password = p
+        except: 
+            pass 
+
+    if not username or not password:
+        print(f"[{host}] Missing credentials (username or password).")
+        return None
+
+    try:
+        print(f"[{host}] Connecting via telnet (with confirmation support)...")
+        tn = telnetlib.Telnet(host, 23, timeout=5)
+
+        idx, match, data = tn.expect([b"[Ll]ogin:", b"[Uu]sername:", b"[Uu]ser:"], timeout=5)
+        if idx == -1:
+            print(f"[{host}] Login prompt not found (timeout). Data: {data}")
+            tn.close()
+            return None
+
+        tn.write(username.encode('ascii') + b"\n")
+
+        idx, match, data = tn.expect([b"[Pp]assword:"], timeout=5)
+        if idx == -1:
+            print(f"[{host}] Password prompt not found. Data: {data}")
+            tn.close()
+            return None
+
+        tn.write(password.encode('ascii') + b"\n")
+
+        idx, match, data = tn.expect([b">", b"#"], timeout=5)
+        if idx == -1:
+            print(f"[{host}] Shell prompt not found after login. Data: {data}")
+            tn.close()
+            return None
+
+        current_prompt = match.group(0).decode('ascii')
+        prompt_char = current_prompt.strip()[-1]
+
+        if prompt_char == '>':
+            tn.write(b"enable\n")
+            tn.read_until(b"#", timeout=3)
+
+        tn.write(b"terminal length 0\n")
+        tn.read_until(b"#", timeout=2)
+
+        results = []
+        for cmd in commands:
+            print(f"[{host}] Executing command: {cmd}")
+            tn.write(cmd.encode('ascii') + b"\n")
+
+            lower_cmd = cmd.strip().lower()
+            needs_confirmation = lower_cmd.startswith('reboot') or lower_cmd.startswith('restore')
+
+            try:
+                if needs_confirmation:
+                    print(f"[{host}] Waiting for confirmation prompt...")
+                    idx, _, response_data = tn.expect(
+                        [
+                            b"[Cc]onfirm.*[Yy]es/[Nn]o",
+                            b"[Yy]es/[Nn]o",
+                            b"#",
+                        ],
+                        timeout=8,
+                    )
+
+                    if idx in [0, 1]:
+                        print(f"[{host}] Found confirmation prompt, responding with 'yes'")
+                        tn.write(b"yes\n")
+                        response_data = tn.read_until(b"#", timeout=10)
+
+                    out = response_data.decode('ascii', errors='ignore')
+                    results.append(out)
+                    print(f"[{host}] Command completed")
+                else:
+                    response_data = tn.read_until(b"#", timeout=5)
+                    out = response_data.decode('ascii', errors='ignore')
+                    results.append(out)
+                    print(f"[{host}] Command completed")
+            except Exception as e:
+                print(f"[{host}] Error executing command '{cmd}': {e}")
+                results.append(f"Error: {str(e)}")
+
+        tn.write(b"exit\n")
+        tn.close()
+        return results
+
+    except Exception as e:
+        print(f"Error connecting to {host}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def send_command(host, commands, username=None, password=None):
     if not username or not password:
         try:

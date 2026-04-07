@@ -93,7 +93,9 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
 
         <nav className="sidebar-nav">
           {filteredNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive =
+              location.pathname === item.path ||
+              location.pathname.startsWith(`${item.path}/`);
             return (
               <Link
                 key={item.path}
@@ -149,7 +151,10 @@ const Sidebar = ({ user, onLogout }: SidebarProps) => {
               key={item.path}
               to={item.path}
               className={`mobile-nav-link ${
-                location.pathname === item.path ? "active" : "inactive"
+                location.pathname === item.path ||
+                location.pathname.startsWith(`${item.path}/`)
+                  ? "active"
+                  : "inactive"
               }`}
             >
               <item.icon size={20} />

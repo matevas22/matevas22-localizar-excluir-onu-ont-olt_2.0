@@ -76,7 +76,9 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       setState((prev) => ({ ...prev, result: null }));
       setShowDeleteModal(false);
     } catch (err: any) {
-      toast.error("Erro ao excluir ONU: " + (err.response?.data?.error || err.message));
+      toast.error(
+        "Erro ao excluir ONU: " + (err.response?.data?.error || err.message),
+      );
     }
   };
 
@@ -136,14 +138,14 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       <AnimatePresence>
         {result && Array.isArray(result) && result.length > 0 && (
           <div className="results-list">
-             {result.map((item) => (
+            {result.map((item) => (
               <motion.div
                 key={`${item.ip}-${item.interface}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 className="result-card"
-                style={{marginBottom: '1rem'}}
+                style={{ marginBottom: "1rem" }}
               >
                 <div className="result-header">
                   <div className="result-title">
@@ -210,38 +212,45 @@ const LocateOnu = ({ state, setState }: PageProps) => {
       </AnimatePresence>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && result && Array.isArray(result) && result.length > 0 && (
-        <div className="modal-overlay">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="modal-content"
-          >
-            <div className="modal-icon-wrapper">
-              <AlertTriangle size={32} />
-            </div>
-            <h3 className="modal-title">Confirmar Exclusão</h3>
-            <p className="modal-desc">
-              Você está prestes a excluir o equipamento{" "}
-              <span className="modal-highlight">{result[0].sn}</span> de{" "}
-              <span className="modal-highlight">{result.length} interface(s)</span> encontrada(s).
-              <br/>
-              Esta ação removerá o dispositivo de TODAS as interfaces listadas e não pode ser desfeita.
-            </p>
-            <div className="modal-actions">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="modal-cancel"
-              >
-                Cancelar
-              </button>
-              <button onClick={handleDelete} className="modal-confirm">
-                Confirmar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {showDeleteModal &&
+        result &&
+        Array.isArray(result) &&
+        result.length > 0 && (
+          <div className="modal-overlay">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="modal-content"
+            >
+              <div className="modal-icon-wrapper">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="modal-title">Confirmar Exclusão</h3>
+              <p className="modal-desc">
+                Você está prestes a excluir o equipamento{" "}
+                <span className="modal-highlight">{result[0].sn}</span> de{" "}
+                <span className="modal-highlight">
+                  {result.length} interface(s)
+                </span>{" "}
+                encontrada(s).
+                <br />
+                Esta ação removerá o dispositivo de TODAS as interfaces listadas
+                e não pode ser desfeita.
+              </p>
+              <div className="modal-actions">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="modal-cancel"
+                >
+                  Cancelar
+                </button>
+                <button onClick={handleDelete} className="modal-confirm">
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
     </div>
   );
 };

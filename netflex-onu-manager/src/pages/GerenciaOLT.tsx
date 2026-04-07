@@ -18,6 +18,7 @@ import {
 import { io } from "socket.io-client";
 import { toast } from "react-toastify";
 import api from "../services/api";
+import OnuDetailModal from "../components/OnuDetailModal";
 import "../styles/OLTManager.css";
 
 const socket = io("http://localhost:5000", {
@@ -30,6 +31,7 @@ const GerenciaOLT = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOlt, setSelectedOlt] = useState<any | null>(null);
   const [selectedPort, setSelectedPort] = useState<string | null>(null);
+  const [selectedOnu, setSelectedOnu] = useState<any | null>(null);
 
   const [portSearch, setPortSearch] = useState("");
   const [onuSearch, setOnuSearch] = useState("");
@@ -123,13 +125,53 @@ const GerenciaOLT = () => {
   const handleSelectOlt = (olt: any) => {
     setSelectedOlt(olt);
     setSelectedPort(null);
+    setSelectedOnu(null);
     setPortSearch("");
     setOnuSearch("");
   };
 
   const handleSelectPort = (port: string) => {
     setSelectedPort(port);
+    setSelectedOnu(null);
     setOnuSearch("");
+  };
+
+  const handleSelectOnu = (onu: any) => {
+    if (!selectedOlt || !selectedPort) return;
+
+    console.log(
+      "[DEBUG] handleSelectOnu - selectedPort:",
+      selectedPort,
+      "onu.onu_id:",
+      onu.onu_id,
+    );
+    console.log(
+      '[DEBUG] selectedPort.replace("gpon-olt_", ""):',
+      selectedPort.replace("gpon-olt_", ""),
+    );
+
+    // Extract just the ID part from onu_id if it contains the full interface
+    let onuId = onu.onu_id;
+    if (onu.onu_id && onu.onu_id.includes(":")) {
+      // Extract the part after the last ':'
+      onuId = onu.onu_id.split(":").pop();
+      console.log("[DEBUG] Extracted onuId from interface:", onuId);
+    }
+
+    const interfaceName = `gpon-onu_${selectedPort.replace("gpon-olt_", "")}:${onuId}`;
+    console.log("[DEBUG] Final interfaceName:", interfaceName);
+
+    setSelectedOnu({
+      ...onu,
+      interface: interfaceName,
+      olt_ip: selectedOlt.ip,
+      olt_name: selectedOlt.name,
+      port: selectedPort,
+    });
+  };
+
+  const handleCloseOnu = () => {
+    setSelectedOnu(null);
   };
 
   const getPhaseColor = (state: string) => {
@@ -377,7 +419,11 @@ const GerenciaOLT = () => {
                               </tr>
                             ) : (
                               filteredOnus.map((onu: any, i: number) => (
-                                <tr key={i}>
+                                <tr
+                                  key={i}
+                                  className="onu-row-clickable"
+                                  onClick={() => handleSelectOnu(onu)}
+                                >
                                   <td>
                                     <strong>{onu.onu_id}</strong>
                                   </td>
@@ -417,6 +463,15 @@ const GerenciaOLT = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <OnuDetailModal
+        open={!!selectedOnu}
+        onClose={handleCloseOnu}
+        oltIp={selectedOnu?.olt_ip || ""}
+        oltName={selectedOnu?.olt_name || selectedOlt?.name || ""}
+        port={selectedOnu?.port || selectedPort || ""}
+        onu={selectedOnu}
+      />
     </div>
   );
 };

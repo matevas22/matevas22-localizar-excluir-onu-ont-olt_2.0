@@ -964,6 +964,513 @@ strong {
   padding-left: 1.5rem;
 }
 
+.onu-row-clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.onu-row-clickable:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.onu-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.onu-detail-modal {
+  width: min(1280px, 100%);
+  max-height: 92vh;
+  overflow: hidden;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.onu-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.onu-detail-kicker {
+  margin: 0 0 0.25rem;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+}
+
+.onu-detail-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.4rem;
+}
+
+.onu-detail-subtitle {
+  margin: 0.35rem 0 0;
+  color: #a1a1aa;
+}
+
+.onu-detail-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.onu-icon-btn,
+.onu-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e5e7eb;
+}
+
+.onu-detail-loading {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  color: #a1a1aa;
+}
+
+.onu-detail-body {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.onu-detail-sidebar,
+.onu-detail-main {
+  min-height: 0;
+}
+
+.onu-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.onu-summary-card,
+.onu-panel-card {
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.onu-summary-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.onu-pill {
+  display: inline-flex;
+  padding: 0.24rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.onu-summary-top h3 {
+  margin: 0.5rem 0 0.2rem;
+  color: #fff;
+}
+
+.onu-summary-top p {
+  margin: 0;
+  color: #a1a1aa;
+}
+
+.onu-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+}
+
+.onu-summary-grid,
+.onu-info-grid,
+.onu-signal-grid,
+.wifi-grid,
+.diagnostic-raw-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.onu-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 1rem;
+}
+
+.onu-summary-grid div,
+.onu-info-card {
+  padding: 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.onu-summary-grid span,
+.onu-info-card span,
+.onu-panel-head p {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.78rem;
+}
+
+.onu-summary-grid strong,
+.onu-info-card strong {
+  display: block;
+  color: #fff;
+  margin-top: 0.25rem;
+  word-break: break-word;
+}
+
+.onu-action-stack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.onu-action-btn,
+.onu-primary-btn,
+.onu-tab {
+  border: 0;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.onu-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e5e7eb;
+}
+
+.onu-action-btn.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+}
+
+.onu-action-btn:disabled,
+.onu-primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.onu-tabs {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.onu-tab {
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d4d4d8;
+}
+
+.onu-tab.active {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.15),
+    rgba(99, 102, 241, 0.15)
+  );
+  color: #fff;
+}
+
+.onu-detail-main {
+  min-width: 0;
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.onu-panel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onu-panel-head h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.onu-signal-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.onu-signal-card,
+.wifi-card,
+.diagnostic-raw-box,
+.history-card,
+.logs-list {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.onu-signal-card {
+  padding: 0.85rem;
+}
+
+.onu-signal-card span,
+.onu-signal-card small {
+  color: #9ca3af;
+}
+
+.onu-signal-card strong {
+  display: block;
+  margin: 0.4rem 0;
+  color: #fff;
+  font-size: 1.5rem;
+}
+
+.onu-signal-card.emerald {
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.12);
+}
+.onu-signal-card.blue {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+.onu-signal-card.violet {
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.12);
+}
+.onu-signal-card.amber {
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.12);
+}
+
+.onu-inline-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.onu-form-field {
+  flex: 1;
+}
+
+.onu-form-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.onu-form-field input,
+.onu-password-row input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  padding: 0.75rem 0.85rem;
+  outline: none;
+}
+
+.onu-password-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.onu-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e5e7eb;
+}
+
+.onu-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  background: linear-gradient(135deg, #10b981, #22c55e);
+  color: #fff;
+}
+
+.wifi-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wifi-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.wifi-card {
+  padding: 0.9rem;
+}
+
+.wifi-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #a7f3d0;
+  margin-bottom: 0.5rem;
+}
+
+.wifi-card strong {
+  color: #fff;
+  font-size: 1.15rem;
+  word-break: break-word;
+}
+
+.wifi-current-value {
+  margin: 0.25rem 0 0.8rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.wifi-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.wifi-inline-form {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.wifi-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.history-card {
+  padding: 0.85rem;
+  min-height: 260px;
+}
+
+.diagnostic-raw-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.diagnostic-raw-box {
+  padding: 0.85rem;
+}
+
+.diagnostic-raw-box p,
+.wifi-raw-block h4 {
+  margin: 0 0 0.6rem;
+  color: #9ca3af;
+}
+
+.diagnostic-raw-box pre {
+  margin: 0;
+  color: #d1d5db;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.raw-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.raw-line {
+  padding: 0.72rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d1d5db;
+  word-break: break-word;
+}
+
+.empty-inline {
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+}
+
+.onu-row-clickable:hover td {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.onu-row-clickable td {
+  transition: background-color 0.2s ease;
+}
+
+@media (max-width: 1180px) {
+  .onu-detail-body {
+    grid-template-columns: 1fr;
+  }
+
+  .onu-detail-modal {
+    max-height: 94vh;
+  }
+}
+
+@media (max-width: 860px) {
+  .onu-signal-grid,
+  .wifi-edit-grid,
+  .wifi-grid,
+  .diagnostic-raw-grid,
+  .onu-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onu-inline-form,
+  .onu-action-stack {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .onu-detail-modal {
+    width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
   .details-layout {
     grid-template-columns: 1fr;
