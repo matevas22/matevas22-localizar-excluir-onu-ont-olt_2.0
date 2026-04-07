@@ -178,4 +178,3 @@ def start_monitor(app, socketio_instance):
     thread.start()
     print("[MONITOR] Thread disparada com sucesso.")
 
-    #teste
